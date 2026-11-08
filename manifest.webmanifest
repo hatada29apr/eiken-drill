@@ -1,6 +1,6 @@
 {
-  "name": "英検ライティング通勤ドリル",
-  "short_name": "英検ドリル",
+  "name": "英検用脳筋ドリル",
+  "short_name": "脳筋ドリル",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
