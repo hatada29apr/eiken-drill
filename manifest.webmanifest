@@ -1,0 +1,10 @@
+{
+  "name": "英検ライティング通勤ドリル",
+  "short_name": "英検ドリル",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "lang": "ja"
+}
