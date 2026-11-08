@@ -20,10 +20,14 @@
 <div id="js" class="row ng">① JavaScript: 動いていません（この行が赤のままなら、JSが無効な開き方です）</div>
 <div id="ls" class="row">② 記録の保存: 確認中…</div>
 <div id="voices" class="row">③ 読み上げの声: 確認中…</div>
+<div class="row">版: 2（読み上げ対策と記録を追加）</div>
+<button id="beep">⓪ 効果音を鳴らす（消音スイッチの確認）</button>
 <button id="en">④ 英語を読み上げる</button>
 <button id="ja">⑤ 日本語を読み上げる</button>
 <button id="seq">⑥ 自動で続けて読み上げる（運転中モードの試験・約15秒）</button>
 <div id="seqout" class="row">⑥ の結果: 未実行</div>
+<div class="row">音声の記録（新しい順。このあたりを撮影して送ってください）
+<pre id="log" style="white-space:pre-wrap;font-size:13px;margin:6px 0 0;max-height:240px;overflow:auto"></pre></div>
 <div id="sa" class="row">⑦ ホーム画面からの起動: 確認中…</div>
 <div id="sw" class="row">⑧ オフラインの準備: 確認中…</div>
 <div id="wl" class="row">⑨ 画面を消さない機能: 確認中…</div>
@@ -55,18 +59,63 @@
   listVoices();
   if (hasTTS) speechSynthesis.onvoiceschanged = listVoices;
 
+  // 音声の記録（原因の切り分け用）
+  const logEl = $('log');
+  function log(msg) {
+    const t = new Date().toTimeString().slice(0, 8);
+    logEl.textContent = t + ' ' + msg + '\n' + logEl.textContent;
+  }
+  function state() {
+    return hasTTS ? '[話し中=' + speechSynthesis.speaking + ' 待ち=' + speechSynthesis.pending + ' 一時停止=' + speechSynthesis.paused + ']' : '';
+  }
+
+  // 対策A: 読み上げ中のデータを手元に持ち続ける（iPhone で途中で片付けられて音が切れるのを防ぐ）
+  const live = new Set();
+  function pickVoice(lang) {
+    const v = speechSynthesis.getVoices();
+    return v.find(x => x.lang.replace('_', '-') === lang && x.localService) ||
+           v.find(x => x.lang.replace('_', '-') === lang) ||
+           v.find(x => x.lang.startsWith(lang.slice(0, 2))) || null;
+  }
   function say(text, lang) {
     return new Promise((resolve) => {
       if (!hasTTS) return resolve(false);
+      // 対策A: 詰まった前の読み上げを解いてから話す
+      if (speechSynthesis.speaking || speechSynthesis.pending) { log('前の読み上げを取り消し ' + state()); speechSynthesis.cancel(); }
+      if (speechSynthesis.paused) speechSynthesis.resume();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = lang;
+      const voice = pickVoice(lang);
+      if (voice) u.voice = voice;
       u.rate = 0.95;
-      u.onend = () => resolve(true);
-      u.onerror = () => resolve(false);
+      u.volume = 1;
+      live.add(u);
+      let done = false;
+      const finish = (ok, why) => {
+        if (done) return; done = true;
+        live.delete(u); clearTimeout(guard);
+        log((ok ? '終了 ' : '失敗 ') + why + ' ' + state());
+        resolve(ok);
+      };
+      u.onstart = () => log('開始 ' + lang + ' 声=' + (voice ? voice.name : '既定'));
+      u.onend = () => finish(true, '');
+      u.onerror = (e) => finish(false, '(' + e.error + ')');
+      // 終了の合図が来ないまま止まるのを防ぐ（文字数から見積もった時間＋5秒で打ち切る）
+      const guard = setTimeout(() => finish(false, '(終了の合図が来ないため打ち切り)'), text.length * 150 + 5000);
+      log('依頼 ' + lang + ' ' + state());
       speechSynthesis.speak(u);
     });
   }
   const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+  $('beep').onclick = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(); o.frequency.value = 880;
+      o.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.4);
+      log('効果音を鳴らしました（聞こえなければ消音スイッチがオン）');
+    } catch (e) { log('効果音: 失敗 ' + e.message); }
+  };
 
   $('en').onclick = () => say('I agree that people should use public transportation more often.', 'en-US');
   $('ja').onclick = () => say('公共交通機関をもっと使うべきだという意見に賛成です。', 'ja-JP');
