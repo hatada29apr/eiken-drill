@@ -1,5 +1,5 @@
 // オフライン用。版を上げると、次回オンラインで開いたときに新しいファイルへ入れ替わる。
-const VERSION = '20261108-24f839b7';
+const VERSION = '20261110-8df6d2ab';
 const FILES = ['./', './index.html', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
