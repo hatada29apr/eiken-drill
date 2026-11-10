@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>音声の確認</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 14px; background: #fff; color: #111; font-size: 16px; line-height: 1.55; }
+  h1 { font-size: 20px; margin: 4px 0 10px; }
+  h2 { font-size: 16px; margin: 18px 0 6px; }
+  .row { padding: 10px; margin: 8px 0; border-radius: 10px; background: #f3f4f6; }
+  .ok { background: #dcfce7; } .ng { background: #fee2e2; }
+  button { font-size: 17px; padding: 12px; width: 100%; margin: 6px 0; border-radius: 10px; border: 1px solid #cbd5e1; background: #fff; color: #1d4ed8; }
+  .v { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+  .v button { width: auto; padding: 6px 12px; font-size: 14px; margin: 0; }
+  pre { white-space: pre-wrap; font-size: 13px; margin: 0; }
+  small { color: #555; }
+</style>
+</head>
+<body>
+<h1>音声の確認（版 v1）</h1>
+<p><small>アプリ本体とは別のページです。結果の画面を撮影して送ってください。</small></p>
+
+<h2>A. 音声入力</h2>
+<div id="sr" class="row">確認中…</div>
+<button id="rec">① 押してから英語で話す（例: I agree with this idea.）</button>
+<div id="heard" class="row">聞き取った文: まだ</div>
+<button id="loop">② 読み上げ → 音声入力 → 読み上げ を自動で（運転中モードの試験）</button>
+<div id="loopout" class="row">②の結果: 未実行</div>
+
+<h2>B. 読み上げの声</h2>
+<div id="vc" class="row">確認中…</div>
+<div id="voices"></div>
+
+<h2>記録</h2>
+<div class="row"><pre id="log"></pre></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const log = (m) => { $('log').textContent = new Date().toTimeString().slice(0, 8) + ' ' + m + '\n' + $('log').textContent; };
+const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+log('起動: ' + (standalone ? 'ホーム画面から' : 'Safari から'));
+
+// ---- 音声入力 ----
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+$('sr').textContent = SR ? '音声入力の機能: あり' : '音声入力の機能: なし（この開き方では使えません）';
+$('sr').className = 'row ' + (SR ? 'ok' : 'ng');
+function listen(ms = 7000) {
+  return new Promise((resolve) => {
+    if (!SR) return resolve({ ok: false, why: 'no-api' });
+    const r = new SR();
+    r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3; r.continuous = false;
+    let done = false;
+    const fin = (x) => { if (done) return; done = true; clearTimeout(t); try { r.stop(); } catch {} resolve(x); };
+    r.onresult = (e) => { const alts = [...e.results[0]].map((a) => a.transcript); log('聞き取り: ' + alts.join(' / ')); fin({ ok: true, text: alts[0], alts }); };
+    r.onerror = (e) => { log('音声入力エラー: ' + e.error); fin({ ok: false, why: e.error }); };
+    r.onend = () => fin({ ok: false, why: 'end-no-result' });
+    const t = setTimeout(() => fin({ ok: false, why: 'timeout' }), ms);
+    try { r.start(); log('音声入力: 開始'); } catch (e) { log('音声入力 start 失敗: ' + e.message); fin({ ok: false, why: 'start-failed' }); }
+  });
+}
+$('rec').onclick = async () => {
+  $('heard').textContent = '聞いています…（話してください）';
+  const r = await listen();
+  $('heard').textContent = r.ok ? '聞き取った文: ' + r.text : '聞き取れませんでした（' + r.why + '）';
+  $('heard').className = 'row ' + (r.ok ? 'ok' : 'ng');
+};
+
+// ---- 読み上げ ----
+const live = new Set();
+let chosen = { 'en': null, 'ja': null };
+function say(text, lang, voice) {
+  return new Promise((resolve) => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang; if (voice) u.voice = voice;
+    live.add(u);
+    u.onend = () => { live.delete(u); resolve(true); };
+    u.onerror = (e) => { live.delete(u); log('読み上げエラー: ' + e.error); resolve(false); };
+    speechSynthesis.speak(u);
+  });
+}
+$('loop').onclick = async () => {
+  $('loopout').textContent = '実行中…画面に触らずに、読み上げのあと英語で答えてください';
+  const a = await say('Please say in English: I agree.', 'en-US', chosen.en);
+  const r = await listen();
+  const b = await say(r.ok ? 'I heard: ' + r.text : 'I could not hear you.', 'en-US', chosen.en);
+  const ok = a && r.ok && b;
+  $('loopout').textContent = '②の結果: ' + (ok ? '最後まで自動で進みました（聞き取り: ' + r.text + '）' : '途中で止まりました（' + (r.ok ? '読み上げ' : r.why) + '）');
+  $('loopout').className = 'row ' + (ok ? 'ok' : 'ng');
+};
+
+// 声の一覧。名前から男女と品質を推定する（iPhone の声の名前の一覧に基づく推定）
+const FEMALE = /samantha|ava|allison|susan|victoria|karen|moira|tessa|fiona|serena|kate|nicky|zoe|joelle|kyoko|o-ren|hattori|siri.*female|female|flo|grandma|sandy|shelley|martha|catherine/i;
+const MALE = /alex|aaron|fred|daniel|oliver|tom|evan|nathan|arthur|gordon|rishi|otoya|siri.*male|male|reed|rocko|eddy|grandpa|ralph|albert|junior|lee/i;
+function describe(v) {
+  const g = FEMALE.test(v.name) ? '女性' : MALE.test(v.name) ? '男性' : '不明';
+  const q = /premium|プレミアム/i.test(v.name + v.voiceURI) ? '最高品質' : /enhanced|拡張/i.test(v.name + v.voiceURI) ? '高品質' : '標準';
+  return { g, q };
+}
+function listVoices() {
+  const vs = speechSynthesis.getVoices().filter((v) => /^(en|ja)/.test(v.lang));
+  if (!vs.length) return;
+  const hq = vs.filter((v) => describe(v).q !== '標準').length;
+  $('vc').textContent = `英語・日本語の声: ${vs.length} 個（うち高品質 ${hq} 個）`;
+  $('vc').className = 'row ' + (hq ? 'ok' : '');
+  $('voices').innerHTML = vs.sort((a, b) => a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name)).map((v, i) => {
+    const d = describe(v);
+    return `<div class="v"><span>${v.name}<br><small>${v.lang} ・ ${d.g} ・ ${d.q}${v.localService ? '' : ' ・ ネット'}</small></span><button data-i="${i}">試す</button></div>`;
+  }).join('');
+  const sorted = vs;
+  $('voices').querySelectorAll('button').forEach((b) => b.onclick = () => {
+    const v = sorted[Number(b.dataset.i)];
+    chosen[v.lang.slice(0, 2)] = v;
+    say(v.lang.startsWith('ja') ? '公共交通機関をもっと使うべきだと思います。' : 'I believe that people should use public transportation more often.', v.lang, v);
+    log('試した声: ' + v.name + ' (' + v.lang + ')');
+  });
+}
+listVoices();
+speechSynthesis.onvoiceschanged = listVoices;
+</script>
+</body>
+</html>
