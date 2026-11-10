@@ -1,6 +1,6 @@
 // オフライン用。版を上げると、次回オンラインで開いたときに新しいファイルへ入れ替わる。
-const VERSION = '20261111-126e86f2';
-const FILES = ['./', './index.html', './manifest.webmanifest'];
+const VERSION = '20261111-49e4f52a';
+const FILES = ['./', './index.html', './manifest.webmanifest', './voice-test.html'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
