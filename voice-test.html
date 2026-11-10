@@ -18,7 +18,7 @@
 </style>
 </head>
 <body>
-<h1>音声の確認（版 v2）</h1>
+<h1>音声の確認（版 v3）</h1>
 <p><a href="./" style="color:#1d4ed8">‹ アプリに戻る</a></p>
 <p><small>アプリ本体とは別のページです。結果の画面を撮影して送ってください。</small></p>
 
@@ -51,14 +51,20 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 $('sr').textContent = SR ? '音声入力の機能: あり' : '音声入力の機能: なし（この開き方では使えません）';
 $('sr').className = 'row ' + (SR ? 'ok' : 'ng');
 // どこで止まるかが分かるよう、音声入力の合図をすべて記録する
-function listen(ms = 7000, opt = {}) {
+// 前の音声入力が「end」を出し切るまで、次を始めない（iPhone は途中で止めるとマイクが無音のままになる）
+let srIdle = Promise.resolve();
+async function listen(ms = 7000, opt = {}) {
+  await srIdle;
+  await new Promise((r) => setTimeout(r, 300));
+  let markIdle; srIdle = new Promise((r) => (markIdle = r));
   return new Promise((resolve) => {
-    if (!SR) return resolve({ ok: false, why: 'no-api' });
+    if (!SR) { markIdle(); return resolve({ ok: false, why: 'no-api' }); }
     const r = new SR();
     r.lang = opt.lang || 'en-US'; r.interimResults = !!opt.interim; r.maxAlternatives = 3; r.continuous = !!opt.continuous;
     let done = false, best = '';
     const t0 = Date.now(), sec = () => ((Date.now() - t0) / 1000).toFixed(1) + '秒';
-    const fin = (x) => { if (done) return; done = true; clearTimeout(t); try { r.abort(); } catch {} resolve(x); };
+    // 結果が来ても止めない。iPhone が自分で end を出すのを待つ（abort すると次からマイクが無音になった）
+    const fin = (x) => { if (done) return; done = true; clearTimeout(t); resolve(x); };
     for (const ev of ['audiostart', 'soundstart', 'speechstart', 'speechend', 'soundend', 'audioend', 'nomatch'])
       r.addEventListener(ev, () => log(`  ${sec()} 合図: ${ev}`));
     r.onresult = (e) => {
@@ -68,10 +74,12 @@ function listen(ms = 7000, opt = {}) {
       if (res.isFinal || !opt.interim) fin({ ok: true, text: best });
     };
     r.onerror = (e) => { log(`  ${sec()} 音声入力エラー: ${e.error}${done ? '（時間切れで止めた後）' : ''}`); fin({ ok: !!best, text: best, why: e.error }); };
-    r.onend = () => { log(`  ${sec()} 合図: end`); fin({ ok: !!best, text: best, why: 'end-no-result' }); };
-    const t = setTimeout(() => { log(`  ${sec()} 時間切れ（結果が来ないのでこちらで止めた）`); fin({ ok: !!best, text: best, why: 'timeout' }); }, ms);
+    r.onend = () => { log(`  ${sec()} 合図: end`); clearTimeout(guardEnd); markIdle(); fin({ ok: !!best, text: best, why: 'end-no-result' }); };
+    let guardEnd = null;
+    // 時間切れは stop（穏やかに終える）。end が来なければ2秒後に次へ進めるようにする
+    const t = setTimeout(() => { log(`  ${sec()} 時間切れ（stop で終えた）`); try { r.stop(); } catch {} guardEnd = setTimeout(markIdle, 2000); fin({ ok: !!best, text: best, why: 'timeout' }); }, ms);
     try { r.start(); log(`音声入力: 開始（${r.lang}${opt.interim ? '・途中も受け取る' : ''}${opt.continuous ? '・続けて聞く' : ''}）`); }
-    catch (e) { log('音声入力 start 失敗: ' + e.message); fin({ ok: false, why: 'start-failed' }); }
+    catch (e) { log('音声入力 start 失敗: ' + e.message); markIdle(); fin({ ok: false, why: 'start-failed' }); }
   });
 }
 async function runRec(opt, ms) {
