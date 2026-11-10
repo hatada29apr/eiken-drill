@@ -18,7 +18,7 @@
 </style>
 </head>
 <body>
-<h1>音声の確認（版 v1）</h1>
+<h1>音声の確認（版 v2）</h1>
 <p><a href="./" style="color:#1d4ed8">‹ アプリに戻る</a></p>
 <p><small>アプリ本体とは別のページです。結果の画面を撮影して送ってください。</small></p>
 
@@ -26,6 +26,10 @@
 <div id="sr" class="row">確認中…</div>
 <button id="rec">① 押してから英語で話す（例: I agree with this idea.）</button>
 <div id="heard" class="row">聞き取った文: まだ</div>
+<button id="rec2">③ 設定を変えて話す（途中の聞き取りも受け取る・12秒）</button>
+<button id="recja">④ 日本語で話す（例: これはテストです）</button>
+<button id="mic">⑤ マイクの音量を見る（5秒・話すと棒が伸びる）</button>
+<div id="meter" class="row">⑤の結果: 未実行</div>
 <button id="loop">② 読み上げ → 音声入力 → 読み上げ を自動で（運転中モードの試験）</button>
 <div id="loopout" class="row">②の結果: 未実行</div>
 
@@ -46,25 +50,57 @@ log('起動: ' + (standalone ? 'ホーム画面から' : 'Safari から'));
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 $('sr').textContent = SR ? '音声入力の機能: あり' : '音声入力の機能: なし（この開き方では使えません）';
 $('sr').className = 'row ' + (SR ? 'ok' : 'ng');
-function listen(ms = 7000) {
+// どこで止まるかが分かるよう、音声入力の合図をすべて記録する
+function listen(ms = 7000, opt = {}) {
   return new Promise((resolve) => {
     if (!SR) return resolve({ ok: false, why: 'no-api' });
     const r = new SR();
-    r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3; r.continuous = false;
-    let done = false;
-    const fin = (x) => { if (done) return; done = true; clearTimeout(t); try { r.stop(); } catch {} resolve(x); };
-    r.onresult = (e) => { const alts = [...e.results[0]].map((a) => a.transcript); log('聞き取り: ' + alts.join(' / ')); fin({ ok: true, text: alts[0], alts }); };
-    r.onerror = (e) => { log('音声入力エラー: ' + e.error); fin({ ok: false, why: e.error }); };
-    r.onend = () => fin({ ok: false, why: 'end-no-result' });
-    const t = setTimeout(() => fin({ ok: false, why: 'timeout' }), ms);
-    try { r.start(); log('音声入力: 開始'); } catch (e) { log('音声入力 start 失敗: ' + e.message); fin({ ok: false, why: 'start-failed' }); }
+    r.lang = opt.lang || 'en-US'; r.interimResults = !!opt.interim; r.maxAlternatives = 3; r.continuous = !!opt.continuous;
+    let done = false, best = '';
+    const t0 = Date.now(), sec = () => ((Date.now() - t0) / 1000).toFixed(1) + '秒';
+    const fin = (x) => { if (done) return; done = true; clearTimeout(t); try { r.abort(); } catch {} resolve(x); };
+    for (const ev of ['audiostart', 'soundstart', 'speechstart', 'speechend', 'soundend', 'audioend', 'nomatch'])
+      r.addEventListener(ev, () => log(`  ${sec()} 合図: ${ev}`));
+    r.onresult = (e) => {
+      const res = e.results[e.results.length - 1];
+      best = res[0].transcript;
+      log(`  ${sec()} 聞き取り${res.isFinal ? '（確定）' : '（途中）'}: ${best}`);
+      if (res.isFinal || !opt.interim) fin({ ok: true, text: best });
+    };
+    r.onerror = (e) => { log(`  ${sec()} 音声入力エラー: ${e.error}${done ? '（時間切れで止めた後）' : ''}`); fin({ ok: !!best, text: best, why: e.error }); };
+    r.onend = () => { log(`  ${sec()} 合図: end`); fin({ ok: !!best, text: best, why: 'end-no-result' }); };
+    const t = setTimeout(() => { log(`  ${sec()} 時間切れ（結果が来ないのでこちらで止めた）`); fin({ ok: !!best, text: best, why: 'timeout' }); }, ms);
+    try { r.start(); log(`音声入力: 開始（${r.lang}${opt.interim ? '・途中も受け取る' : ''}${opt.continuous ? '・続けて聞く' : ''}）`); }
+    catch (e) { log('音声入力 start 失敗: ' + e.message); fin({ ok: false, why: 'start-failed' }); }
   });
 }
-$('rec').onclick = async () => {
+async function runRec(opt, ms) {
   $('heard').textContent = '聞いています…（話してください）';
-  const r = await listen();
+  const r = await listen(ms, opt);
   $('heard').textContent = r.ok ? '聞き取った文: ' + r.text : '聞き取れませんでした（' + r.why + '）';
   $('heard').className = 'row ' + (r.ok ? 'ok' : 'ng');
+}
+$('rec2').onclick = () => runRec({ interim: true, continuous: true }, 12000);
+$('recja').onclick = () => runRec({ lang: 'ja-JP', interim: true }, 10000);
+// マイクの音が届いているか（音声認識とは別に、録音だけを試す）
+$('mic').onclick = async () => {
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const an = ctx.createAnalyser(); ctx.createMediaStreamSource(st).connect(an);
+    const buf = new Uint8Array(an.fftSize); let peak = 0; const t0 = Date.now();
+    const tick = () => {
+      an.getByteTimeDomainData(buf);
+      const v = Math.max(...buf.map((x) => Math.abs(x - 128))) / 128; peak = Math.max(peak, v);
+      $('meter').textContent = '音量 ' + '█'.repeat(Math.round(v * 30)) + `（最大 ${Math.round(peak * 100)}%）`;
+      if (Date.now() - t0 < 5000) requestAnimationFrame(tick);
+      else { st.getTracks().forEach((x) => x.stop()); ctx.close(); log(`マイク: 最大音量 ${Math.round(peak * 100)}%`); $('meter').className = 'row ' + (peak > 0.05 ? 'ok' : 'ng'); }
+    };
+    tick();
+  } catch (e) { $('meter').textContent = 'マイクを使えません（' + e.name + '）'; $('meter').className = 'row ng'; log('マイク: ' + e.name); }
+};
+$('rec').onclick = async () => {
+  await runRec({}, 7000);
 };
 
 // ---- 読み上げ ----
