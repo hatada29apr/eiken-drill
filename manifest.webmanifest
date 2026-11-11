@@ -1,10 +1,11 @@
 {
-  "name": "英検用脳筋ドリル",
-  "short_name": "脳筋ドリル",
+  "name": "英検脳筋トレ",
+  "short_name": "英検脳筋トレ",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f6f7fb",
   "theme_color": "#ffffff",
-  "lang": "ja"
+  "lang": "ja",
+  "icons": [{ "src": "icon-180.png", "sizes": "180x180", "type": "image/png" }]
 }

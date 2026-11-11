@@ -1,6 +1,6 @@
 // オフライン用。版を上げると、次回オンラインで開いたときに新しいファイルへ入れ替わる。
-const VERSION = '20261111-acb8f189';
-const FILES = ['./', './index.html', './manifest.webmanifest', './voice-test.html'];
+const VERSION = '20261112-b36dad9f';
+const FILES = ["./","./index.html","./manifest.webmanifest","./logo.png","./mascot.png","./icon-180.png","./chara/standard/1.webp","./chara/standard/2.webp","./chara/standard/3.webp","./chara/standard/4.webp","./chara/standard/5.webp","./chara/c2/1.webp","./chara/c2/2.webp","./chara/c2/3.webp","./chara/c2/4.webp","./chara/c2/5.webp","./chara/c3/1.webp","./chara/c3/2.webp","./chara/c3/3.webp","./chara/c3/4.webp","./chara/c3/5.webp","./chara/c4/1.webp","./chara/c4/2.webp","./chara/c4/3.webp","./chara/c4/4.webp","./chara/c4/5.webp"];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
