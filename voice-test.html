@@ -18,11 +18,16 @@
 </style>
 </head>
 <body>
-<h1>音声の確認（版 v3）</h1>
+<h1>音声の確認（版 v4）</h1>
 <p><a href="./" style="color:#1d4ed8">‹ アプリに戻る</a></p>
 <p><small>アプリ本体とは別のページです。結果の画面を撮影して送ってください。</small></p>
 
-<h2>A. 音声入力</h2>
+<h2>A. 音声入力（v4: 2つの方法を試す）</h2>
+<div class="row"><b>それぞれ、ページを開き直してから1つだけ試してください。</b></div>
+<button id="mA">方法A：同じ仕組みを使い回す（3回続けて話す）</button>
+<button id="mB">方法B：ずっと聞き続ける（25秒の間に3回話す）</button>
+<div id="mOut" class="row">結果: 未実行</div>
+<details><summary>以前のボタン（①〜⑤）</summary>
 <div id="sr" class="row">確認中…</div>
 <button id="rec">① 押してから英語で話す（例: I agree with this idea.）</button>
 <div id="heard" class="row">聞き取った文: まだ</div>
@@ -33,6 +38,7 @@
 <button id="loop">② 読み上げ → 音声入力 → 読み上げ を自動で（運転中モードの試験）</button>
 <div id="loopout" class="row">②の結果: 未実行</div>
 
+</details>
 <h2>B. 読み上げの声</h2>
 <div id="vc" class="row">確認中…</div>
 <div id="voices"></div>
@@ -109,6 +115,54 @@ $('mic').onclick = async () => {
 };
 $('rec').onclick = async () => {
   await runRec({}, 7000);
+};
+
+// ---- v4: 方法A（1つの音声入力を使い回す） ----
+let shared = null;
+function onceShared(ms) {
+  return new Promise((resolve) => {
+    if (!SR) return resolve({ ok: false, why: 'no-api' });
+    if (!shared) { shared = new SR(); shared.lang = 'en-US'; shared.interimResults = true; shared.continuous = false; log('方法A: 音声入力を1つ作った'); }
+    const r = shared; let done = false, best = '';
+    const t0 = Date.now(), sec = () => ((Date.now() - t0) / 1000).toFixed(1) + '秒';
+    const fin = (x) => { if (done) return; done = true; clearTimeout(t); resolve(x); };
+    r.onaudiostart = () => log(`  ${sec()} 合図: audiostart`);
+    r.onspeechstart = () => log(`  ${sec()} 合図: speechstart`);
+    r.onresult = (e) => { const res = e.results[e.results.length - 1]; best = res[0].transcript; if (res.isFinal) log(`  ${sec()} 聞き取り（確定）: ${best}`); };
+    r.onerror = (e) => log(`  ${sec()} エラー: ${e.error}`);
+    r.onend = () => { log(`  ${sec()} 合図: end`); fin({ ok: !!best, text: best }); };
+    const t = setTimeout(() => { try { r.stop(); } catch {} }, ms);
+    try { r.start(); log('方法A: 開始'); } catch (e) { log('方法A start 失敗: ' + e.message); fin({ ok: false }); }
+  });
+}
+$('mA').onclick = async () => {
+  const res = [];
+  for (let k = 1; k <= 3; k++) {
+    $('mOut').textContent = `${k}回目: 英語で話してください（例: I agree with this idea.）`;
+    const r = await onceShared(7000);
+    res.push(r.ok ? '○' : '×');
+    await new Promise((x) => setTimeout(x, 600));
+  }
+  $('mOut').textContent = `方法Aの結果: ${res.join(' ')}（○が3つなら使える）`;
+  $('mOut').className = 'row ' + (res.every((x) => x === '○') ? 'ok' : 'ng');
+  log('方法Aの結果: ' + res.join(' '));
+};
+// ---- v4: 方法B（一度だけ始めて聞き続ける） ----
+$('mB').onclick = () => {
+  if (!SR) return;
+  const r = new SR(); r.lang = 'en-US'; r.interimResults = false; r.continuous = true;
+  let n = 0; const t0 = Date.now(), sec = () => ((Date.now() - t0) / 1000).toFixed(1) + '秒';
+  r.onaudiostart = () => log(`  ${sec()} 合図: audiostart`);
+  r.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) {
+      n++; log(`  ${sec()} 聞き取り ${n}: ${e.results[i][0].transcript}`);
+      $('mOut').textContent = `方法B: ${n}回 聞き取れた（続けて話してください）`;
+    }
+  };
+  r.onerror = (e) => log(`  ${sec()} エラー: ${e.error}`);
+  r.onend = () => { log(`  ${sec()} 合図: end`); $('mOut').textContent = `方法Bの結果: ${n}回 聞き取れた（3回なら使える）`; $('mOut').className = 'row ' + (n >= 3 ? 'ok' : 'ng'); };
+  setTimeout(() => { try { r.stop(); } catch {} }, 25000);
+  try { r.start(); log('方法B: 開始（25秒）'); $('mOut').textContent = '方法B: 英語で1文ずつ、間を空けて3回話してください'; } catch (e) { log('方法B start 失敗: ' + e.message); }
 };
 
 // ---- 読み上げ ----
