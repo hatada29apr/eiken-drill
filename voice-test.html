@@ -18,7 +18,7 @@
 </style>
 </head>
 <body>
-<h1>音声の確認（版 v4）</h1>
+<h1>音声の確認（版 v5）</h1>
 <p><a href="./" style="color:#1d4ed8">‹ アプリに戻る</a></p>
 <p><small>アプリ本体とは別のページです。結果の画面を撮影して送ってください。</small></p>
 
@@ -26,6 +26,7 @@
 <div class="row"><b>それぞれ、ページを開き直してから1つだけ試してください。</b></div>
 <button id="mA">方法A：同じ仕組みを使い回す（3回続けて話す）</button>
 <button id="mB">方法B：ずっと聞き続ける（25秒の間に3回話す）</button>
+<button id="mC">方法C：聞き続けながら読み上げる（本番と同じ流れ・3問）</button>
 <div id="mOut" class="row">結果: 未実行</div>
 <details><summary>以前のボタン（①〜⑤）</summary>
 <div id="sr" class="row">確認中…</div>
@@ -163,6 +164,36 @@ $('mB').onclick = () => {
   r.onend = () => { log(`  ${sec()} 合図: end`); $('mOut').textContent = `方法Bの結果: ${n}回 聞き取れた（3回なら使える）`; $('mOut').className = 'row ' + (n >= 3 ? 'ok' : 'ng'); };
   setTimeout(() => { try { r.stop(); } catch {} }, 25000);
   try { r.start(); log('方法B: 開始（25秒）'); $('mOut').textContent = '方法B: 英語で1文ずつ、間を空けて3回話してください'; } catch (e) { log('方法B start 失敗: ' + e.message); }
+};
+
+// ---- v5: 方法C（マイクを開いたまま、読み上げ → 答える を3回） ----
+$('mC').onclick = async () => {
+  if (!SR) return;
+  const r = new SR(); r.lang = 'en-US'; r.interimResults = true; r.continuous = true;
+  let accept = false, buf = '', last = 0, dead = '';
+  r.onresult = (e) => { for (let i = e.resultIndex; i < e.results.length; i++) { const t = e.results[i][0].transcript;
+    if (!accept) { if (e.results[i].isFinal) log('  （読み上げ中に聞こえた声を捨てた: ' + t + '）'); continue; }
+    if (e.results[i].isFinal) buf = (buf + ' ' + t).trim(); last = Date.now(); } };
+  r.onerror = (e) => { log('  エラー: ' + e.error); };
+  r.onend = () => { dead = 'ended'; log('  合図: end（マイクが止まった）'); };
+  r.start(); log('方法C: 開始');
+  const first = say('Question one. Please say: I agree with this idea.', 'en-US', chosen.en);
+  const res = [];
+  const qs = ['I agree with this idea.', 'Question two. Please say: Public transport is important.', 'Question three. Please say: Thank you very much.'];
+  for (let k = 0; k < 3; k++) {
+    if (k === 0) await first; else await say(qs[k], 'en-US', chosen.en);
+    await new Promise((x) => setTimeout(x, 350));
+    buf = ''; last = 0; accept = true; $('mOut').textContent = `方法C: ${k + 1}問目 英語で答えてください`;
+    const t0 = Date.now();
+    while (!dead && Date.now() - t0 < 9000) { if (last && Date.now() - last > 1600) break; await new Promise((x) => setTimeout(x, 150)); }
+    accept = false;
+    log(`  ${k + 1}問目の答え: ${buf || '（聞き取れず）'}`); res.push(buf ? '○' : '×');
+    await say(buf ? 'I heard: ' + buf : 'I could not hear you.', 'en-US', chosen.en);
+  }
+  try { r.stop(); } catch {}
+  $('mOut').textContent = `方法Cの結果: ${res.join(' ')}（○が3つなら本番の作りで使える）`;
+  $('mOut').className = 'row ' + (res.every((x) => x === '○') ? 'ok' : 'ng');
+  log('方法Cの結果: ' + res.join(' '));
 };
 
 // ---- 読み上げ ----
