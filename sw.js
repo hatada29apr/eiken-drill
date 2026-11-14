@@ -1,5 +1,5 @@
 // オフライン用。版を上げると、次回オンラインで開いたときに新しいファイルへ入れ替わる。
-const VERSION = '20261114-4a13c01d';
+const VERSION = '20261114-f8aea021';
 const FILES = ["./","./index.html","./data-2.js","./data-p1.js","./manifest.webmanifest","./logo.png","./mascot.png","./icon-180.png","./chara/standard/1.webp","./chara/standard/2.webp","./chara/standard/3.webp","./chara/standard/4.webp","./chara/standard/5.webp","./chara/c2/1.webp","./chara/c2/2.webp","./chara/c2/3.webp","./chara/c2/4.webp","./chara/c2/5.webp","./chara/c3/1.webp","./chara/c3/2.webp","./chara/c3/3.webp","./chara/c3/4.webp","./chara/c3/5.webp","./chara/c4/1.webp","./chara/c4/2.webp","./chara/c4/3.webp","./chara/c4/4.webp","./chara/c4/5.webp"];
 
 self.addEventListener('install', (e) => {

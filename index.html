@@ -296,7 +296,9 @@
   details.modetip { margin: 12px 0; padding: 12px 16px; }
   details.modetip summary { font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
   details.modetip summary svg { width: 18px; height: 18px; color: var(--orange1); }
-  details.modetip ul { padding-left: 20px; margin: 8px 0 0; font-size: 14.5px; line-height: 1.75; }
+  details.modetip ul { padding-left: 20px; margin: 4px 0 0; font-size: 14.5px; line-height: 1.75; }
+  details.modetip .tiplead { margin: 8px 0 0; font-size: 14px; color: var(--muted, #5d6578); }
+  details.modetip h4 { margin: 12px 0 0; font-size: 14px; font-weight: 800; color: var(--orange1); }
   .entry { margin: 10px 0; }
   .entry .ai { width: 52px; height: 52px; border-radius: 16px; }
   .entry b { font-size: 18px; }
@@ -313,7 +315,7 @@
 <nav class="tabs" id="tabs"></nav>
 <script>
 const CHARAS = [{"id":"standard","name":"スタンダード"},{"id":"c2","name":"ブラウン"},{"id":"c3","name":"ホワイト"},{"id":"c4","name":"宇宙人"}];
-const BUILD = "20261114-4a13c01d";
+const BUILD = "20261114-f8aea021";
 // 問題データは級ごとの別ファイル（data-2.js / data-p1.js）。選んだ級だけを読む（2026-11-14 index.html が 3.2MB になったため）
 const DATA = {};
 const dataLoading = {};
@@ -693,16 +695,33 @@ function growBar() {
     ${nd.rows.length ? `<div class="growlist">${nd.rows.map((r) => `<span class="${r.ok ? 'okl' : ''}">${h(r.t)}</span>`).join('')}</div>` : ''}</div>`;
 }
 // 各モードの先頭のコツ（たためるカード。初めて開いたときは開いた状態。store.seenTips）
+// 中身は 参照/勉強法とコツ_2026-11-14.md（合格者・塾の記事の調査）。[見出し, [項目…]] の並び
 const tipsOpen = new Set();
 function modeTip(key) {
-  const g = store.grade, D = g === 'p1' ? [90, 40] : [85, 35];
+  const g = store.grade, D = g === 'p1' ? [90, 40] : [85, 35], line = GROW[g].line;
   const T = {
-    basic: ['基礎トレのコツ', ['10問ずつ、1日の目標まで気楽に続ける', '間違えた問題は、解説を読んでから次へ。10分後からまた出る', '正解した問題も、1・3・7・16日…と日をあけてまた出る（後日の復習で定着させる）', '難易度は Lv1 で型を入れる → Lv2（本番並み）→ Lv3（発展）。迷ったらランダム']],
-    mini: ['ミニテストのコツ', ['技能を選ぶ。苦手な1つだけでも、組み合わせてもよい', '時間を計って、本番の配分で解く（途中で止めない）', '終わったら見直し。間違えた設問は選択肢の解説まで読む']],
-    exam: [`本番のコツ（${GRADES[g]}・筆記 ${D[0]}分）`, [`筆記の時間配分: 大問1 10分・大問2〜3 ${D[1]}分・要約 15分・英作文 20分・見直し 5分`, 'リスニングは放送の前に選択肢を読む', 'メモは数字と条件だけ（全部は書かない）']],
+    basic: ['基礎トレ（脳筋トレ）のコツ', '本番の問題を「すっと解く」ための部品づくり。1問10〜40秒で、型・言い換え・単語を体に入れる。', [
+      ['進め方', ['10問ずつ、1日の目標まで。長く1回より、すき間時間に毎日（15分×2でよい）', '迷ったら「おまかせ」。苦手が分かっていれば、その種類のタイルを続けて解く', '難易度は Lv1 で型を入れる → 8割取れたら Lv2（本番並み）→ Lv3（発展）']],
+      ['間違えたら', ['正解の理由だけでなく「ほかの選択肢がなぜ誤りか」まで読む。本番の誤りの選択肢も同じ作り方', '勘で当たった問題も、解説を読んでおく', '間違えた問題は10分後から、正解した問題も1・3・7・16日…と日をあけてまた出る。「間違えた」でまとめて解き直せる']],
+      ['覚え方', ['単語は文の中で覚える。🔊で例文を聞き、声に出してまねる', '英作文・要約の正解の文は音読して、そのまま使える形で覚える。慣れたら解答方式を「入力」にして書けるか試す']],
+    ], `<button class="chipbtn" id="toTips">${icon('bulb')}ライティングの型と見直しの観点</button>`],
+    mini: ['ミニテストのコツ', `本番の一部を、本番と同じ時間で解く。弱い技能を見つけて基礎トレに戻るための物差し。R・W・L すべて ${line}% 以上で脳筋くんが Lv4。`, [
+      ['使い方', ['週2〜3回。まず3技能を1回ずつ解き、低い技能から重点的に', '時間を計り、途中で止めない。分からない問題も印象で選んで先へ（空欄にしない）']],
+      ['リーディング', ['大問1は1問30秒。空所の前後の語と結びつく語を探す。知らない語は、分かる選択肢を消して残りから', '空所の長文は、空所の前後の文の関係（対比・理由・結果・例）をつかんでから、つなぎ語や内容を選ぶ', '内容一致の長文は、設問を先に読んで探すものを決めてから本文へ。設問はほぼ段落の順。答えらしい所を見つけても、その段落の最後まで読む', '迷ったら、主語・時点・程度・因果が本文とずれていないか見る。本文と同じ語が並ぶ選択肢ほど疑う（正解はたいてい言い換え）']],
+      ['ライティング', ['要約: 先に各段落の役割（話題・利点・問題点など）を決める → 1段落1文 → 具体例と数字は捨てる → 語数を合わせる', '英作文: 書き始める前の2〜3分で、立場と理由2つ（POINTS から）を決める。書き出してから構成を変えない', '最後の2分で三単現の s・時制・冠詞・スペルを見直す']],
+      ['リスニング', ['放送の前に選択肢を見て、共通点と違い（人・時・場所・数）から何を聞かれるか予想する', '会話は後半の発言に答えがあることが多い。文章は冒頭と but / however のあとをよく聞く', '聞こえた語がそのまま入った選択肢は、ひっかけのことがある（正解は言い換え）', ...(g === 'p1' ? ['第3部（Real-Life）は、放送前の10秒で状況と質問を読み、条件（予算・時間・人数など）に印をつける'] : [])]],
+      ['終わったら', ['間違いの原因を3つに分ける: 単語を知らない → 基礎トレの単語 ／ 時間が足りない → 配分を見直す ／ 読めたのに選び間違えた → 本文の根拠の場所を確かめる', 'リスニングは見直しで原稿を読み、聞き取れなかった所を声に出して読む（音読）']],
+    ]],
+    exam: [`本番のコツ（${GRADES[g]}・筆記 ${D[0]}分）`, `一次試験1回分を通しで解く。R・W・L すべて ${line}% 以上で脳筋くんが Lv5（合格レベル）。`, [
+      ['筆記の順番と時間配分', ['ライティングを先に: 要約 15分 → 英作文 20分。2題でリーディング全問と同じ重みなので、時間切れで書けないのが一番の損（上のボタンで先に移れる）', `次に大問1 10分 → 大問2〜3 ${D[1]}分`, '残り5分で、見直しとリスニングの選択肢の先読み']],
+      ['時間が足りなくなったら', ['1問に2分以上かけない。2択まで絞ったら決めて先へ', '長文を1題まるごと捨てない。捨てるなら各長文の最後の設問（全体を問うもの）から', '全部の解答を埋める（誤りでも減点はない）']],
+      ['リスニング', ['放送の前（指示文が流れる間）に、次の部の選択肢を読む。指示は毎回同じなので聞かなくてよい', '答えたらすぐ次の問題の選択肢へ。聞き逃した問題は引きずらない', 'メモは数字・条件・人名だけ（全部は書かない）']],
+      ['終わってから（ここが一番大事）', ['復習は解いた時間より長く。間違えた設問と、勘で当たった設問の解説を読む', '間違いの原因（単語・時間・根拠の読み違い）で分けて、基礎トレ・ミニテストに戻る', '予測模試は日をあけて解き直してよい。2回目は全問正解を目指す', '試験の前日・当日は新しいことをせず、型と単語を見直す']],
+    ]],
   }[key];
   if (!store.seenTips[key]) { tipsOpen.add(key); store.seenTips[key] = 1; save(); }
-  return `<details class="card modetip" data-tip="${key}" ${tipsOpen.has(key) ? 'open' : ''}><summary>${icon('bulb')}${T[0]}</summary><ul>${T[1].map((x) => `<li>${h(x)}</li>`).join('')}</ul></details>`;
+  return `<details class="card modetip" data-tip="${key}" ${tipsOpen.has(key) ? 'open' : ''}><summary>${icon('bulb')}${T[0]}</summary><p class="tiplead">${h(T[1])}</p>`
+    + T[2].map(([hd, xs]) => `<h4>${h(hd)}</h4><ul>${xs.map((x) => `<li>${h(x)}</li>`).join('')}</ul>`).join('') + (T[3] || '') + '</details>';
 }
 function bindTips() { app.querySelectorAll('details.modetip').forEach((d) => d.ontoggle = () => { if (d.open) tipsOpen.add(d.dataset.tip); else tipsOpen.delete(d.dataset.tip); }); }
 function ring(n, goal, onDark = false) {
@@ -769,8 +788,6 @@ function problems() {
   const g = store.grade, pool = allItems(g, BASIC_TYPES), wrong = wrongPool(g).filter((it) => !TYPE_INFO[it.type].exam).length;
   app.innerHTML = `
     ${modeTip('basic')}
-    <div class="card intro"><b>基礎トレ（脳筋トレ）</b><span>本番をすっと解くための「英検脳」の基礎。1問10〜40秒、10問ずつ。</span>
-      <button class="chipbtn" id="toTips">${icon('bulb')}コツ</button></div>
     <h2>難易度</h2>
     <div class="seg">${Object.entries(LEVELS).map(([k, v]) => `<button data-lv="${k}" class="${k === store.set.level ? 'on' : ''}">${v}</button>`).join('')}</div>
     <h2>解答方式</h2>
@@ -1134,41 +1151,48 @@ function mockResult(idx, up = null) {
   app.querySelector('#mback').onclick = () => show(r.mini ? 'mini' : 'exam');
   if (up) evolve(up.from, up.to); // Lv が上がったら成長の演出
 }
-// 途中の模擬試験・ミニテストがあれば、そのカード（本番・ミニテストのどちらのタブにも出す。新しく始めると上書きされるため）
-function resumeCard(g) {
-  const m = store.mock;
-  if (m && m.g === g) return `<div class="card mockcard"><b>${m.mini ? 'ミニテスト' : '模擬試験'}の途中</b><span>${mockName(m)}・${m.phase === 'rw' ? `筆記 残り ${mmss(m.limit - m.used)}` : m.phase === 'wself' ? '自己採点' : 'リスニング'}</span>
+// 途中の模擬試験・ミニテスト。同じ種類のタブでは「続きから」のカードを出す（新しく始めると上書きされるため）。
+// もう一方のタブでは一行の注意だけ出し、普通に始められる（始めるときに確認する）
+const mockPending = (g) => { const m = store.mock; return m && m.g === g ? m : null; };
+function resumeCard(g, mini) {
+  const m = mockPending(g);
+  if (m && !!m.mini === mini) return `<div class="card mockcard"><b>${m.mini ? 'ミニテスト' : '模擬試験'}の途中</b><span>${mockName(m)}・${m.phase === 'rw' ? `筆記 残り ${mmss(m.limit - m.used)}` : m.phase === 'wself' ? '自己採点' : 'リスニング'}</span>
     <button class="big" id="mcont">続きから</button></div>`;
   return '';
 }
+const otherPendingNote = (g, mini) => { const m = mockPending(g);
+  return m && !!m.mini !== mini ? `<p class="muted" style="margin:8px 4px">${m.mini ? 'ミニテスト' : '模擬試験'}が途中です（${m.mini ? 'ミニテスト' : '本番'}タブで続きから）。ここで始めると、途中の分は消えます。</p>` : ''; };
+const okToStart = (g) => { const m = mockPending(g); return !m || confirm(`途中の${m.mini ? 'ミニテスト' : '模擬試験'}は消えます。新しく始めますか？`); };
 const histRows = (g, mini) => { const hist = store.mocks.filter((r) => r.g === g && !!r.mini === mini).slice(-5).reverse();
   return hist.length ? `<div class="card"><div class="label">これまでの結果</div>${hist.map((r) => `<button class="linkbtn mhist" data-mr="${store.mocks.indexOf(r)}">${new Date(r.at).toLocaleDateString('ja-JP')} ${r.mini ? 'ミニ' : r.set ? MOCK_SETS.find(([k]) => k === r.set)[1] : 'おまかせ'}：${[r.R[1] ? `R ${r.R[0]}/${r.R[1]}` : '', r.L[1] ? `L ${r.L[0]}/${r.L[1]}` : '', r.W[1] ? `W ${r.W[0]}/${r.W[1]}` : ''].filter(Boolean).join('・')}</button>`).join('')}</div>` : ''; };
 // 本番タブ: 模擬試験だけ（予測模試3回＋おまかせ模試）
 function mockCards(g) {
-  const rc = resumeCard(g); if (rc) return rc;
+  const rc = resumeCard(g, false); if (rc) return rc;
   const setBtns = MOCK_SETS.map(([k, name]) => { const s = mockShort(g, k), done = store.mocks.some((r) => r.g === g && r.set === k);
     return `<button class="action examcard" data-ms="${k}" ${s.length ? 'disabled' : ''}><span class="ai" style="background:#ff5f3a">${icon('bolt')}</span><span><b>${name}${done ? ' ✓' : ''}</b><small>${s.length ? '準備中' : '次回の試験の予測（話題・形式）'}</small></span><span class="go">${icon('chev')}</span></button>`; }).join('');
   const short = mockShort(g), fresh = mockFreshCount(g);
   return `<div class="card intro"><b>模擬試験（一次試験 1回分）</b><span>本番と同じ問題数・形式・制限時間（筆記 ${MOCK[g].min}分 → リスニング 放送1回）。最後にライティングを自己採点して、技能ごとの正答率を出す。</span></div>
+    ${otherPendingNote(g, false)}
     ${setBtns}
-    <button class="action examcard" data-ms="" ${short.length ? 'disabled' : ''}><span class="ai" style="background:#2b3aa8">${icon('repeat')}</span><span><b>おまかせ模試</b><small>${short.length ? '準備中（' + short.join('・') + '）' : `まだ解いていない問題で あと${fresh}回分`}</small></span><span class="go">${icon('chev')}</span></button>
+    <button class="action examcard" data-ms="""" ${short.length ? 'disabled' : ''}><span class="ai" style="background:#2b3aa8">${icon('repeat')}</span><span><b>おまかせ模試</b><small>${short.length ? '準備中（' + short.join('・') + '）' : `まだ解いていない問題で あと${fresh}回分`}</small></span><span class="go">${icon('chev')}</span></button>
     ${histRows(g, false)}`;
 }
 // ミニテストタブ
 function miniCards(g) {
-  const rc = resumeCard(g); if (rc) return rc;
+  const rc = resumeCard(g, true); if (rc) return rc;
   const o = store.set.mini, ms = miniShort(g), lq = MINI.l[g].reduce((a, [t, n]) => a + (t === 'listen2' && g === 'p1' ? n * 2 : n), 0);
   const min = (o.R ? MINI.min : 0) + (o.W ? MINI.wmin[o.wt] : 0) + (o.L ? Math.ceil(lq * 0.9) : 0);
   return `<div class="card mini"><b>ミニテスト</b><span class="muted">本番と同じ形を小さく。技能を選んで、1つだけでも組み合わせても解ける</span>
     <div class="chips minisk">${[['R', `リーディング<small>大問1 ${MINI.r1}問・長文1題・${MINI.min}分</small>`], ['W', `ライティング<small>${o.wt === 'essay' ? `英作文1題・${MINI.wmin.essay}分` : `要約1題・${MINI.wmin.sum}分`}</small>`], ['L', `リスニング<small>${lq}問・約${Math.ceil(lq * 0.9)}分</small>`]].map(([k, v]) => `<button data-sk="${k}" class="${o[k] ? 'on' : ''}">${v}</button>`).join('')}</div>
     ${o.W ? `<div class="seg">${[['sum', '要約'], ['essay', '英作文']].map(([k, v]) => `<button data-wt="${k}" class="${o.wt === k ? 'on' : ''}">${v}</button>`).join('')}</div>` : ''}
     <button class="big" data-mini="1" ${ms.length ? 'disabled' : ''} style="margin-top:12px">${ms.length ? (ms[0] === '技能を選ぶ' ? '技能を1つ以上選ぶ' : `準備中（${ms.join('・')}）`) : `ミニテストを始める（約${min}分）`}</button></div>
+    ${otherPendingNote(g, true)}
     ${histRows(g, true)}`;
 }
 function bindMockCards(g) {
   const c = app.querySelector('#mcont'); if (c) c.onclick = () => mockView();
-  app.querySelectorAll('[data-ms]').forEach((b) => b.onclick = () => { newMock(g, b.dataset.ms || null); mockView(); });
-  const mi = app.querySelector('[data-mini]'); if (mi) mi.onclick = () => { newMini(g); mockView(); };
+  app.querySelectorAll('[data-ms]').forEach((b) => b.onclick = () => { if (!okToStart(g)) return; newMock(g, b.dataset.ms || null); mockView(); });
+  const mi = app.querySelector('[data-mini]'); if (mi) mi.onclick = () => { if (!okToStart(g)) return; newMini(g); mockView(); };
   app.querySelectorAll('[data-sk]').forEach((b) => b.onclick = () => { store.set.mini[b.dataset.sk] = !store.set.mini[b.dataset.sk]; save(); show('mini'); });
   app.querySelectorAll('[data-wt]').forEach((b) => b.onclick = () => { store.set.mini.wt = b.dataset.wt; save(); show('mini'); });
   app.querySelectorAll('[data-mr]').forEach((b) => b.onclick = () => mockResult(+b.dataset.mr));
@@ -1205,14 +1229,11 @@ const TIPS = {
     ['合格者がやっていること', `<ul><li>型（序論・結論）を丸ごと覚える。例文の暗記が9割という人もいる</li>
       <li>どんなテーマでも賛成・反対の理由を頭の中で作る「独り言練習」。🔊で模範文を聞いて、まねして言うのも効く</li>
       <li>模範解答を書き写し、音読する</li><li>1日15〜30分でも毎日続ける</li></ul>`],
-    ['このアプリの使い方', `<ul><li>Lv1 で数をこなして型を入れる → Lv2（本番並み）→ Lv3</li>
-      <li>間違えた問題は10分後から、正解した問題は1・3・7・16日…と間隔を空けて出る</li>
-      <li>入力式で「自分で書く」練習をすると、本番で手が止まりにくい</li></ul>`],
   ],
 };
 function tips() {
   const list = [...TIPS[store.grade], ...TIPS.common];
-  app.innerHTML = `<h2 style="margin-top:8px">${GRADES[store.grade]}のライティングのコツ</h2>` +
+  app.innerHTML = `<h2 style="margin-top:8px">${GRADES[store.grade]}のライティングの型と見直し</h2>` +
     list.map(([t, body]) => `<div class="card tip"><h3><span class="dot"></span>${t}</h3>${body}</div>`).join('') +
     `<p class="muted">試験の形式: 一次試験はリーディング・リスニング・ライティングが同じ重み。ライティングは2題だけで一次の3分の1を占める。</p>`;
 }
