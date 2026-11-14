@@ -289,16 +289,31 @@
   .drive .stop { border: 0; border-radius: 22px; font-size: 24px; font-weight: 900; padding: 24px; color: #fff; background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 12px 30px rgba(239,68,68,.35); }
   .drive .sst { text-align: center; color: #7f8bb8; font-size: 12.5px; margin-top: 10px; }
   .drive .count { text-align: center; color: #9fb0ff; margin-bottom: 12px; font-weight: 700; }
+  /* 構成変更（2026-11-14）: 設定の歯車・各モードのコツ・次の Lv までの表示 */
+  .gearbtn { border: 0; background: #e9ebf3; color: var(--sub); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; padding: 0; }
+  .gearbtn svg { width: 19px; height: 19px; }
+  .gearbtn.on { background: #fff; color: var(--indigo); box-shadow: 0 1px 4px rgba(17,24,61,.15); }
+  details.modetip { margin: 12px 0; padding: 12px 16px; }
+  details.modetip summary { font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  details.modetip summary svg { width: 18px; height: 18px; color: var(--orange1); }
+  details.modetip ul { padding-left: 20px; margin: 8px 0 0; font-size: 14.5px; line-height: 1.75; }
+  .entry { margin: 10px 0; }
+  .entry .ai { width: 52px; height: 52px; border-radius: 16px; }
+  .entry b { font-size: 18px; }
+  .entry small { display: block; margin-top: 2px; font-size: 13px; }
+  .growlist { margin: 6px 0 0; font-size: 12px; font-weight: 700; opacity: .9; display: grid; gap: 2px; }
+  .growlist .okl { color: #7ee2a8; }
+  .growup { text-align: center; font-weight: 900; font-size: 17px; color: var(--navy2); background: linear-gradient(90deg, #fff3d6, #ffe0c2, #fff3d6); border-radius: 14px; padding: 10px; margin: 8px 0; animation: popIn .4s ease-out; }
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="flameG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb21b"/><stop offset="1" stop-color="#ff5f3a"/></linearGradient></defs></svg>
-<header class="bar"><div class="logo"><h1 style="margin:0;line-height:0"><img id="logo" src="logo.png" alt="英検脳筋トレ" width="126" height="42"></h1></div><div class="gsw" id="gsw"></div><span class="streak" id="streak"></span></header>
+<header class="bar"><div class="logo"><h1 style="margin:0;line-height:0"><img id="logo" src="logo.png" alt="英検脳筋トレ" width="126" height="42"></h1></div><div class="gsw" id="gsw"></div><span class="streak" id="streak"></span><button class="gearbtn" id="gear" aria-label="設定"></button></header>
 <main id="app"></main>
 <nav class="tabs" id="tabs"></nav>
 <script>
 const CHARAS = [{"id":"standard","name":"スタンダード"},{"id":"c2","name":"ブラウン"},{"id":"c3","name":"ホワイト"},{"id":"c4","name":"宇宙人"}];
-const BUILD = "20261114-6116ae7f";
+const BUILD = "20261114-4a13c01d";
 // 問題データは級ごとの別ファイル（data-2.js / data-p1.js）。選んだ級だけを読む（2026-11-14 index.html が 3.2MB になったため）
 const DATA = {};
 const dataLoading = {};
@@ -307,7 +322,7 @@ function loadGrade(g) {
   return (dataLoading[g] ||= new Promise((ok, ng) => {
     const s = document.createElement('script');
     s.src = `data-${g}.js?v=${BUILD}`;
-    s.onload = () => { const d = (self.EIKEN_DATA || {})[g]; if (d) { DATA[g] = d; ok(); } else { delete dataLoading[g]; ng(new Error('no data')); } };
+    s.onload = () => { const d = (self.EIKEN_DATA || {})[g]; if (d) { addSteps(d); DATA[g] = d; ok(); } else { delete dataLoading[g]; ng(new Error('no data')); } };
     s.onerror = () => { delete dataLoading[g]; ng(new Error('load failed')); };
     document.head.appendChild(s);
   }));
@@ -340,19 +355,60 @@ const TYPE_INFO = {
   para_role:  { name: '段落の役割',       hint: 'この段落の役割を選ぶ（段落のほとんどが1つの事例や数値なら『具体例・データ』、それ以外は主張の中身で決める）', sec: 25, choiceOnly: true },
   generalize: { name: '一般化する',       hint: '色の付いた具体的な部分を、要約で使う一般的な言い方にする', sec: 25, cloze: true },
   length_adj: { name: '語数を調整する',   hint: '同じ意味のまま、より短く言い換えた文を選ぶ', write: '同じ意味のまま、より短い英文に書き換える', sec: 35 },
-  // 本番形式（過去問と同じ形）
-  daimon1:      { name: '大問1 語彙', hint: '文脈に合う語句を選ぶ（本番の大問1と同じ形）', sec: 25, cloze: true, exam: true },
+  // 旧本番問題を基礎トレの時間に圧縮したもの（essay_full・summary_full の steps から読み込み時に作る。2026-11-14）
+  essay_step: { name: '英作文を1文ずつ', hint: '英作文のこの段階に入る最もよい1文を選ぶ', sec: 40, choiceOnly: true },
+  sum_step:   { name: '要約を1段落ずつ', hint: 'この段落を1文に要約した最もよいものを選ぶ', sec: 40, choiceOnly: true },
+  // 大問1（語彙）は基礎トレの「単語・熟語」の欄で1問ずつ解く
+  daimon1:      { name: '大問1 語彙', hint: '文脈に合う語句を選ぶ（本番の大問1と同じ形）', sec: 25, cloze: true, vocab: true },
+  // 本番形式（通し）は模試・ミニテストだけで使う。基礎トレには出さない
+
   summary_full: { name: '要約 本番形式', hint: '3段落の英文を要約する', sec: 240, inputSec: 900, full: true, exam: true },
   essay_full:   { name: '英作文 本番形式', hint: 'TOPIC について意見を書く', sec: 300, inputSec: 1200, full: true, exam: true },
 };
 const TYPES = Object.keys(TYPE_INFO);
 const WRITE_TYPES = TYPES.filter((t) => !TYPE_INFO[t].vocab && !TYPE_INFO[t].exam);
-const EXAM_TYPES = ['essay_full', 'summary_full', 'daimon1'];
+const EXAM_TYPES = ['essay_full', 'summary_full'];
 const BASIC_TYPES = TYPES.filter((t) => !TYPE_INFO[t].exam);
 // 基礎トレの並び: 本番の段階の順（問いを読む → 序論 → 理由 → 具体例 → つなぎ → 語数／段落の役割 → 要点 → 一般化 → 言い換え）
-const ESSAY_DRILLS = ['q_read', 'template', 'reason', 'support', 'connector', 'length_adj', 'ja2en', 'collocation', 'error'];
-const SUMMARY_DRILLS = ['para_role', 'summary', 'generalize', 'paraphrase'];
+const ESSAY_DRILLS = ['q_read', 'template', 'reason', 'support', 'connector', 'length_adj', 'ja2en', 'collocation', 'error', 'essay_step'];
+const SUMMARY_DRILLS = ['para_role', 'summary', 'generalize', 'paraphrase', 'sum_step'];
 const VOCAB_TYPES = TYPES.filter((t) => TYPE_INFO[t].vocab);
+// essay_full・summary_full の steps を、基礎トレの1問ずつ（essay_step・sum_step）にする。データは変えず、読み込み時に作る。
+// set の付いた予測模試の問題は、模試のために取っておくので使わない
+const STEP_ROLE = { intro: '序論（立場）', reason1: '理由1', example1: '理由1の説明・具体例', reason2: '理由2', example2: '理由2の説明・具体例', conclusion: '結論', p1: '第1段落', p2: '第2段落', p3: '第3段落' };
+const STEP_POINT = {
+  intro: '序論は、問いにそのまま答えて、自分の立場をはっきり示す。計画の説明だけでは立場にならない。',
+  reason1: '理由1は、指定された POINTS を使い、立場を支える理由を1文で言う。欠点や別の観点の話は理由にならない。',
+  example1: '説明・具体例は、直前の理由を具体的な場面で支える。理由を言い換えて繰り返すだけでは具体例にならない。',
+  reason2: '理由2は、理由1とは別の POINTS を使い、同じ立場を支える。理由1の繰り返しにしない。',
+  example2: '説明・具体例は、直前の理由を具体的な場面で支える。理由を言い換えて繰り返すだけでは具体例にならない。',
+  conclusion: '結論は、2つの理由をまとめて、序論と同じ立場を言い直す。新しい話は足さない。',
+  p1: '段落の要点だけを、自分の言葉で1文にする。本文の一文をそのまま写さない。',
+  p2: '段落の要点だけを、自分の言葉で1文にする。例や数字は入れず、本文にないことも足さない。',
+  p3: '段落の要点だけを、自分の言葉で1文にする。つなぎ語（However など）で段落の流れを示してよい。',
+};
+function addSteps(d) {
+  const sel = (st) => [{ t: st.t, why: st.why }, ...st.wrong.map((w) => ({ t: w.t, why: w.why }))]; // 正解が先頭（基礎トレの画面が混ぜる）
+  d.essay_step = (d.essay_full || []).filter((it) => !it.set && Array.isArray(it.steps)).flatMap((it) => it.steps.map((st, k) => {
+    const stance = it.stance === 'agree' ? 'Agree' : 'Disagree';
+    const so = it.steps.slice(0, k).map((x) => x.t).join(' ');
+    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, q_ja: it.q_ja, answer: 0, choices: sel(st),
+      q: `${it.situation ? it.situation + ' ' : ''}${it.question}
+Position: ${stance}
+POINTS: ${(it.use_points || []).join(', ')}${so ? `
+So far: ${so}` : ''}
+【${STEP_ROLE[st.role] || st.role}】に入る1文を選ぶ`,
+      point: STEP_POINT[st.role] || it.point, drive: { ja: `${stance === 'Agree' ? '賛成' : '反対'}の立場で、${STEP_ROLE[st.role] || st.role}を英語で言ってください。`, en: st.t } };
+  }));
+  d.sum_step = (d.summary_full || []).filter((it) => !it.set && Array.isArray(it.steps) && Array.isArray(it.passage)).flatMap((it) => it.steps.map((st, k) => {
+    const pi = ['p1', 'p2', 'p3'].indexOf(st.role);
+    if (pi < 0 || !it.passage[pi]) return null;
+    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, q_ja: "", answer: 0, choices: sel(st),
+      q: `${it.passage[pi]}
+【${STEP_ROLE[st.role]}】を1文に要約したものを選ぶ`,
+      point: STEP_POINT[st.role], drive: { ja: `${STEP_ROLE[st.role]}の要点を、英語で言ってください。`, en: st.t } };
+  })).filter(Boolean);
+}
 const LEVELS = { '1': 'Lv1 基礎', '2': 'Lv2 標準', '3': 'Lv3 発展', 'r': 'ランダム' };
 const MODES = { choice: '選択式', input: '入力式' };
 const GRADES = { '2': '2級', 'p1': '準1級' };
@@ -376,13 +432,15 @@ const store = (() => {
   s.badges ||= {};     // id -> 取った日
   s.freeze ||= [];     // お休み券を使った日
   s.cnt ||= {};        // input / drive / lv3ok などの累計
-  // 脳筋レベルの XP。初めて開いたときは、これまでの解答から計算する
+  // 旧 XP（2026-11-14 から表示にも判定にも使わない。古い記録を壊さないため残す）
   if (typeof s.xp !== 'number') s.xp = Object.values(s.rec).reduce((a, r) => a + r.ok * 10 + (r.n - r.ok) * 3, 0);
   s.chara ||= '';
   s.mocks ||= [];     // 模擬試験の結果
   s.mockUsed ||= {};  // 模擬試験で解いた問題の id
   s.mock ??= null;    // 途中の模擬試験
   s.set.mini ||= { R: true, W: false, L: true, wt: 'sum' }; // ミニテストで解く技能
+  s.lvMax ||= {};     // 級ごとの脳筋 Lv（一度上がったら下がらない。2026-11-14）
+  s.seenTips ||= {};  // 各モードのコツを初めて開いた（開いた状態で出す）かどうか
   return s;
 })();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch {} }
@@ -391,6 +449,7 @@ const dkey = (d) => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate
 function today() { return dkey(new Date()); }
 function addStat(o, correct, ms) { o.n++; if (correct) o.ok++; o.ms += ms; return o; }
 function grade(it, correct, ms, how) {
+  const lvBefore = growLv(store.grade);
   const r = rec(it.id);
   ms = Math.min(ms, TYPE_INFO[it.type].full ? 45 * 60e3 : MAX_MS);
   r.n++; if (correct) r.ok++;
@@ -403,20 +462,45 @@ function grade(it, correct, ms, how) {
   if (how) store.cnt[how] = (store.cnt[how] || 0) + 1;
   if (correct && it.level === 3) store.cnt.lv3ok = (store.cnt.lv3ok || 0) + 1;
   if (store.grade === 'p1') store.cnt.p1 = (store.cnt.p1 || 0) + 1;
-  gainXp(xpOf(it, correct, how));
+  const up = growCommit(store.grade, lvBefore);
+  if (up && session) { session.lvFrom ??= up.from; session.lvTo = up.to; }
   save();
   checkBadges();
 }
 
-// ---------- 脳筋レベルとキャラクターの成長（5段階） ----------
-// XP: 正解10・不正解3（解くだけで少し伸びる）。Lv3 の正解・入力式の正解は +5
-const xpOf = (it, correct, how) => (correct ? 10 : 3) + (correct && it.level === 3 ? 5 : 0) + (correct && how === 'input' ? 5 : 0);
-// レベル L に必要な累計 XP（1日10問でおよそ: Lv5 4日・Lv10 2週間・Lv20 6週間・Lv35 3〜4か月）
-const lvXp = (L) => Math.round(30 * Math.pow(L - 1, 1.6));
-function levelOf(xp) { let L = 1; while (lvXp(L + 1) <= xp) L++; return L; }
-const STAGE_LV = [1, 5, 10, 20, 35];
+// ---------- 脳筋くんの成長（級ごとに Lv1〜5。Lv5 ＝その級の合格レベル。キャラの段階 ＝ Lv。2026-11-14） ----------
+// Lv2: その級の正解 150問 ／ Lv3: 500問（累積）。Lv4: ミニテストで R・W・L すべて合格ライン以上 ／ Lv5: 模試1回で R・W・L すべて合格ライン以上（能力）
+// Lv ＝ max(累積, 能力)。一度上がったら下がらない（store.lvMax[級]）
+const GROW = { '2': { pre: 'g2-', line: 65 }, p1: { pre: 'p1-', line: 70 } };
+const GROW_N = [150, 500];
 const STAGE_NAME = ['ひよっこ脳', 'やる気脳', '鍛え中', 'ガッチリ脳', '最強脳筋'];
-const stageOf = (L) => STAGE_LV.filter((x) => L >= x).length;
+const SKILLS = [['R', 'リーディング'], ['W', 'ライティング'], ['L', 'リスニング']];
+const skillPct = (r, k) => (r && r[k] && r[k][1] ? Math.round((r[k][0] / r[k][1]) * 100) : null);
+const skillPass = (r, k, line) => !!(r && r[k] && r[k][1]) && r[k][0] * 100 >= line * r[k][1]; // 丸めない（64.5% を 65% と扱わない）
+// その級の正解の累計（store.rec の id が g2- / p1- で始まるものの ok の合計）
+function cumOk(g) { const pre = GROW[g].pre; let n = 0; for (const id in store.rec) if (id.startsWith(pre)) n += store.rec[id].ok || 0; return n; }
+// 技能 k を含む直近のミニテスト（mini=true）／ 直近の模試（mini=false。技能は問わない）
+function latestRes(g, k, mini) { for (let i = store.mocks.length - 1; i >= 0; i--) { const r = store.mocks[i]; if (r.g === g && !!r.mini === mini && (!k || (r[k] && r[k][1]))) return r; } return null; }
+const miniPassed = (g) => SKILLS.every(([k]) => skillPass(latestRes(g, k, true), k, GROW[g].line));
+const mockPassed = (g) => store.mocks.some((r) => r.g === g && !r.mini && SKILLS.every(([k]) => skillPass(r, k, GROW[g].line)));
+function calcLv(g) { const n = cumOk(g); return Math.max(n >= GROW_N[1] ? 3 : n >= GROW_N[0] ? 2 : 1, mockPassed(g) ? 5 : miniPassed(g) ? 4 : 1); }
+// 級 g の脳筋 Lv（下がらない）。キャラの段階もこの値
+const growLv = (g = store.grade) => Math.max(store.lvMax[g] || 1, calcLv(g));
+// 記録のあとに呼ぶ。Lv が上がっていれば { from, to }、変わらなければ null
+function growCommit(g, before) { const after = growLv(g); store.lvMax[g] = after; return after > before ? { from: before, to: after } : null; }
+for (const g of Object.keys(GRADES)) store.lvMax[g] = growLv(g); // 古い記録は、いまの記録から計算した Lv から始める（演出は出さない）
+// 次の Lv までに足りないもの: { next, head, ratio, rows: [{ t, ok }] }
+function growNeed(g = store.grade) {
+  const L = growLv(g), line = GROW[g].line;
+  if (L >= 5) return { next: 0, head: 'この級の合格レベルに到達！', ratio: 1, rows: [] };
+  if (L <= 2) { const need = GROW_N[L - 1], n = Math.min(cumOk(g), need); return { next: L + 1, head: `正解 ${n}/${need} 問（${GRADES[g]}）`, ratio: n / need, rows: [] }; }
+  const mini = L === 3, rows = SKILLS.map(([k, name]) => { const r = mini ? latestRes(g, k, true) : latestRes(g, null, false), p = skillPct(r, k), ok = skillPass(r, k, line);
+    return { t: `${name} ${p === null ? '—' : p + '%'}（合格ライン ${line}%）${ok ? ' ✓' : ''}`, ok }; });
+  return { next: L + 1, head: mini ? `ミニテストで R・W・L すべて ${line}% 以上` : `模試1回で R・W・L すべて ${line}% 以上`, ratio: rows.filter((x) => x.ok).length / 3, rows };
+}
+// 解放の条件（成績のキャラクター一覧に出す短い説明）
+const growCond = (g, lv) => [null, null, `正解${GROW_N[0]}問`, `正解${GROW_N[1]}問`, `ミニテスト全技能${GROW[g].line}%`, `模試全技能${GROW[g].line}%`][lv];
+const lv = () => growLv(store.grade);
 const curChara = () => CHARAS.find((c) => c.id === store.chara) || CHARAS[0];
 function charaSrc(stage, id) { const c = id ? CHARAS.find((x) => x.id === id) : curChara(); return c ? `chara/${c.id}/${stage}.webp` : 'mascot.png'; }
 const charaImg = (stage, cls = '', id) => `<img class="chara ${cls}" src="${charaSrc(stage, id)}" alt="" draggable="false">`;
@@ -428,12 +512,6 @@ const LINES = {
   ng: ['ドンマイ！', '次でとり返そう！', '解説を読めば筋肉になる！', 'おしい！'],
 };
 const pickLine = (a) => a[Math.floor(Math.random() * a.length)];
-function gainXp(n) {
-  const before = levelOf(store.xp);
-  store.xp += n;
-  const after = levelOf(store.xp);
-  if (session) { session.xp = (session.xp || 0) + n; if (after > before) { session.lvFrom ??= before; session.lvTo = after; } }
-}
 
 // ---------- 連続日数（1日の目標を達成した日が続いた数。月2回までお休み券で守る） ----------
 function streakInfo() {
@@ -470,7 +548,6 @@ function bestStreak() {
 
 // ---------- バッジ ----------
 const totalN = () => Object.values(store.daily).reduce((a, o) => a + o.n, 0);
-const typesTried = () => new Set(Object.values(store.stat).flatMap((o) => Object.keys(o).filter((t) => o[t].n))).size;
 const BADGES = [
   { id: 'first', icon: '🌱', name: 'はじめの一歩', how: '1問解く', ok: () => totalN() >= 1 },
   { id: 'n100', icon: '💪', name: '100問', how: '合計100問', ok: () => totalN() >= 100 },
@@ -479,9 +556,9 @@ const BADGES = [
   { id: 's3', icon: '🔥', name: '3日連続', how: '目標を3日続ける', ok: () => bestStreak() >= 3 },
   { id: 's7', icon: '📅', name: '1週間', how: '目標を7日続ける', ok: () => bestStreak() >= 7 },
   { id: 's30', icon: '🏆', name: '1か月', how: '目標を30日続ける', ok: () => bestStreak() >= 30 },
-  { id: 'all', icon: '🧩', name: '全種類', how: '10種類すべてを解く', ok: () => typesTried() >= TYPES.length },
+  { id: 'all', icon: '🧩', name: '全種類', how: '基礎トレの全種類を解く', ok: () => BASIC_TYPES.every((t) => Object.values(store.stat).some((o) => o[t] && o[t].n)) },
   { id: 'input', icon: '⌨️', name: '書く力', how: '入力式で50問', ok: () => (store.cnt.input || 0) >= 50 },
-  { id: 'evo', icon: '🌟', name: '成長', how: 'キャラクターが第3段階に', ok: () => stageOf(levelOf(store.xp)) >= 3 },
+  { id: 'evo', icon: '🌟', name: '成長', how: 'キャラクターが Lv.3 に', ok: () => Math.max(...Object.keys(GRADES).map((g) => growLv(g))) >= 3 },
   { id: 'lv3', icon: '⛰️', name: 'Lv3突破', how: 'Lv3を10問正解', ok: () => (store.cnt.lv3ok || 0) >= 10 },
   { id: 'p1', icon: '🎓', name: '準1級へ', how: '準1級を30問', ok: () => (store.cnt.p1 || 0) >= 30 },
 ];
@@ -506,17 +583,21 @@ function targetSec(type, g) {
 function itemsOf(g, type, all = false) {
   const lv = store.set.level;
   return ((DATA[g] || {})[type] || []).map((it) => ({ ...it, type }))
-    .filter((it) => all || lv === 'r' || String(it.level || 2) === lv);
+    .filter((it) => !it.set && (all || lv === 'r' || String(it.level || 2) === lv)); // set の付いた予測模試の問題は基礎トレに出さない
 }
 function allItems(g, types = TYPES) { return types.flatMap((t) => itemsOf(g, t)); }
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function pick(pool, n) {
   const now = Date.now();
-  const due = shuffle(pool.filter((it) => store.rec[it.id] && store.rec[it.id].due <= now)).sort((a, b) => rec(a.id).box - rec(b.id).box);
-  const fresh = shuffle(pool.filter((it) => !store.rec[it.id]));
-  const rest = shuffle(pool.filter((it) => store.rec[it.id] && store.rec[it.id].due > now));
+  // 種類ごとに順番に取る（問題数の多い種類に偏らないように。2026-11-14 英作文・要約を1文ずつにして約4割を占めたため）。keep なら各種類の中の並びを保つ
+  const byType = (a, keep) => { const m = {}; (keep ? a : shuffle(a)).forEach((it) => (m[it.type] ||= []).push(it)); const gs = shuffle(Object.values(m)), out = []; for (let k = 0; out.length < a.length; k++) gs.forEach((x) => { if (x[k]) out.push(x[k]); }); return out; };
+  const due = byType(shuffle(pool.filter((it) => store.rec[it.id] && store.rec[it.id].due <= now)).sort((a, b) => rec(a.id).box - rec(b.id).box), true);
+  const fresh = byType(pool.filter((it) => !store.rec[it.id]));
+  const rest = byType(pool.filter((it) => store.rec[it.id] && store.rec[it.id].due > now));
   return [...due, ...fresh, ...rest].slice(0, n);
 }
+// 復習の時期が来た問題（基礎トレの種類だけ。通しの本番形式は基礎トレに出さない）
+function duePool(g) { return BASIC_TYPES.flatMap((t) => itemsOf(g, t, true)).filter((it) => store.rec[it.id] && store.rec[it.id].due <= Date.now()); }
 function wrongPool(g) { return TYPES.flatMap((t) => itemsOf(g, t, true)).filter((it) => store.rec[it.id] && store.rec[it.id].last === 0); }
 function weakest(g) {
   // 正解率がいちばん低い種類（5回以上解いたもの）。なければまだ解いていない種類
@@ -563,16 +644,19 @@ const TYPE_LOOK = {
   ja2en: ['#e06a14', 'spark'], template: ['#141a46', 'words'], connector: ['#0b84c6', 'link'], collocation: ['#b7791f', 'bolt'],
   vocab_je: ['#e0457b', 'words'], vocab_ej: ['#10a37f', 'words'],
   q_read: ['#334155', 'target'], support: ['#2563eb', 'spark'], para_role: ['#0f766e', 'book'], generalize: ['#9333ea', 'repeat'], length_adj: ['#ea580c', 'pen'],
-  daimon1: ['#6d28d9', 'words'], summary_full: ['#0e7490', 'book'], essay_full: ['#be123c', 'pen'],
+  essay_step: ['#be123c', 'pen'], sum_step: ['#0e7490', 'book'], daimon1: ['#6d28d9', 'words'], summary_full: ['#0e7490', 'book'], essay_full: ['#be123c', 'pen'],
 };
 const tIcon = (t) => `<span class="ti" style="background:linear-gradient(135deg, ${TYPE_LOOK[t][0]}, ${TYPE_LOOK[t][0]}cc)">${icon(TYPE_LOOK[t][1])}</span>`;
 
-const TABS = [['home', 'home', 'ホーム'], ['problems', 'bolt', '基礎トレ'], ['exam', 'pen', '本番'], ['stats', 'chart', '成績'], ['settings', 'gear', '設定']];
+// 設定はタブではなく、ヘッダー右の歯車（2026-11-14）
+const TABS = [['home', 'home', 'ホーム'], ['problems', 'bolt', '基礎トレ'], ['mini', 'target', 'ミニテスト'], ['exam', 'pen', '本番'], ['stats', 'chart', '成績']];
 function chrome() {
   document.getElementById('gsw').innerHTML = Object.entries(GRADES).map(([k, v]) => `<button data-g="${k}" class="${k === store.grade ? 'on' : ''}">${v}</button>`).join('');
   document.querySelectorAll('#gsw [data-g]').forEach((b) => b.onclick = () => { store.grade = b.dataset.g; save(); show(tab); });
   const st = streakInfo();
   document.getElementById('streak').innerHTML = `<svg viewBox="0 0 24 24">${IC.flame}</svg>${st.n}`;
+  const gear = document.getElementById('gear');
+  gear.innerHTML = icon('gear'); gear.className = 'gearbtn' + (tab === 'settings' ? ' on' : ''); gear.onclick = () => show('settings');
   document.getElementById('tabs').innerHTML = TABS.map(([k, ic, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${icon(ic)}${l}</button>`).join('');
   document.querySelectorAll('#tabs [data-tab]').forEach((b) => b.onclick = () => show(b.dataset.tab));
 }
@@ -584,7 +668,7 @@ function show(t) {
   document.body.classList.remove('quiz');
   tab = t;
   chrome();
-  ({ home, problems, exam, tips, stats: statsView, settings }[t])();
+  ({ home, problems, mini: miniTab, exam, tips, stats: statsView, settings }[t])();
   scrollTo(0, 0);
 }
 function tiles(g, types) {
@@ -600,13 +684,27 @@ function tiles(g, types) {
       <div class="barl"><i style="width:${bar}%"></i></div></button>`;
   }).join('');
 }
-function xpBar() {
-  const L = levelOf(store.xp), a = lvXp(L), b = lvXp(L + 1), st = stageOf(L);
-  const next = STAGE_LV[st];
-  return `<div class="xpbar"><div class="lab"><span>脳筋 Lv.${L} ・ ${STAGE_NAME[st - 1]}</span><span>あと ${b - store.xp} XP</span></div>
-    <div class="tr"><i style="width:${Math.round(((store.xp - a) / (b - a)) * 100)}%"></i></div>
-    <div class="lab" style="margin:4px 0 0;opacity:.75"><span>${next ? `Lv.${next} で成長` : '最終段階まで成長した！'}</span><span>${store.xp} XP</span></div></div>`;
+// 次の Lv までに足りないものの表示（ホーム・結果画面。暗い背景用）
+function growBar() {
+  const g = store.grade, L = growLv(g), nd = growNeed(g);
+  return `<div class="xpbar"><div class="lab"><span>${GRADES[g]} 脳筋 Lv.${L} ・ ${STAGE_NAME[L - 1]}</span><span>${nd.next ? `Lv.${nd.next} まで` : 'Lv.5 達成！'}</span></div>
+    <div class="tr"><i style="width:${Math.round(nd.ratio * 100)}%"></i></div>
+    <div class="lab" style="margin:4px 0 0;opacity:.85"><span>${h(nd.head)}</span></div>
+    ${nd.rows.length ? `<div class="growlist">${nd.rows.map((r) => `<span class="${r.ok ? 'okl' : ''}">${h(r.t)}</span>`).join('')}</div>` : ''}</div>`;
 }
+// 各モードの先頭のコツ（たためるカード。初めて開いたときは開いた状態。store.seenTips）
+const tipsOpen = new Set();
+function modeTip(key) {
+  const g = store.grade, D = g === 'p1' ? [90, 40] : [85, 35];
+  const T = {
+    basic: ['基礎トレのコツ', ['10問ずつ、1日の目標まで気楽に続ける', '間違えた問題は、解説を読んでから次へ。10分後からまた出る', '正解した問題も、1・3・7・16日…と日をあけてまた出る（後日の復習で定着させる）', '難易度は Lv1 で型を入れる → Lv2（本番並み）→ Lv3（発展）。迷ったらランダム']],
+    mini: ['ミニテストのコツ', ['技能を選ぶ。苦手な1つだけでも、組み合わせてもよい', '時間を計って、本番の配分で解く（途中で止めない）', '終わったら見直し。間違えた設問は選択肢の解説まで読む']],
+    exam: [`本番のコツ（${GRADES[g]}・筆記 ${D[0]}分）`, [`筆記の時間配分: 大問1 10分・大問2〜3 ${D[1]}分・要約 15分・英作文 20分・見直し 5分`, 'リスニングは放送の前に選択肢を読む', 'メモは数字と条件だけ（全部は書かない）']],
+  }[key];
+  if (!store.seenTips[key]) { tipsOpen.add(key); store.seenTips[key] = 1; save(); }
+  return `<details class="card modetip" data-tip="${key}" ${tipsOpen.has(key) ? 'open' : ''}><summary>${icon('bulb')}${T[0]}</summary><ul>${T[1].map((x) => `<li>${h(x)}</li>`).join('')}</ul></details>`;
+}
+function bindTips() { app.querySelectorAll('details.modetip').forEach((d) => d.ontoggle = () => { if (d.open) tipsOpen.add(d.dataset.tip); else tipsOpen.delete(d.dataset.tip); }); }
 function ring(n, goal, onDark = false) {
   const r = 40, c = 2 * Math.PI * r, p = Math.min(1, n / goal);
   return `<svg class="ring" viewBox="0 0 96 96"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff5f3a"/></linearGradient></defs>
@@ -621,10 +719,13 @@ const greeting = () => { const hr = new Date().getHours(); return hr < 5 ? 'こ�
 function home() {
   const g = store.grade, td = store.daily[today()] || { n: 0, ok: 0, ms: 0 }, st = streakInfo();
   const pool = allItems(g, BASIC_TYPES);
-  const dueN = TYPES.flatMap((t) => itemsOf(g, t, true)).filter((it) => store.rec[it.id] && store.rec[it.id].due <= Date.now()).length;
+  const dueN = duePool(g).length;
   const weak = weakest(g);
   const left = Math.max(0, store.set.goal - td.n);
-  const stage = stageOf(levelOf(store.xp));
+  const stage = lv();
+  const resText = (r) => (r ? [['R', 'R'], ['W', 'W'], ['L', 'L']].filter(([k]) => r[k] && r[k][1]).map(([k, n]) => `${n} ${skillPct(r, k)}%`).join('・') : 'まだ受けていない');
+  const lastMini = latestRes(g, null, true), lastMock = latestRes(g, null, false);
+  const entry = (id, color, ic, name, sub) => `<button class="action entry" id="${id}"><span class="ai" style="background:${color}">${icon(ic)}</span><span><b>${name}</b><small>${sub}</small></span><span class="go">${icon('chev')}</span></button>`;
   app.innerHTML = `
     <section class="hero"><div class="chara-wrap" id="heroChara">${charaImg(stage)}</div>
       <div class="hi">${greeting()} ・ ${GRADES[g]}</div>
@@ -635,10 +736,11 @@ function home() {
           <div>${icon('target', 'style="width:18px;height:18px"')}正解率 <b>${pct(td)}</b></div>
           <div>${icon('bolt', 'style="width:18px;height:18px"')}お休み券 残り <b>${st.freezeLeft}</b></div>
         </div></div>
-      ${xpBar()}
+      ${growBar()}
     </section>
-    <button class="big" id="mix">${icon('bolt')}基礎トレ ${td.n ? '続きから' : '今日の'} 10問</button>
-    <button class="action" id="toExam"><span class="ai" style="background:linear-gradient(135deg,#be123c,#f97316)">${icon('pen')}</span><span><b>本番モード</b><small>過去問と同じ形で、英作文・要約・大問1を通しで</small></span><span class="go">${icon('chev')}</span></button>
+    ${entry('toBasic', 'linear-gradient(135deg,#2b3aa8,#5b6cf0)', 'bolt', '基礎トレ', `10問ずつ・1問10〜40秒<br>今日 ${td.n}問（目標 ${store.set.goal}問）`)}
+    ${entry('toMini', 'linear-gradient(135deg,#0e9f8a,#34d399)', 'target', 'ミニテスト', `約15分・技能を選んで本番の形を小さく<br>直近: ${resText(lastMini)}`)}
+    ${entry('toExam', 'linear-gradient(135deg,#be123c,#f97316)', 'pen', '本番モード', `一次試験1回分の模試（筆記＋リスニング）<br>直近: ${resText(lastMock)}`)}
     <h2>おすすめ</h2>
     <div class="card" style="padding:6px 16px">
       ${weak ? `<div class="reco"><span class="rl"><span class="dot" style="background:${TYPE_LOOK[weak][0]}">${icon(TYPE_LOOK[weak][1])}</span><span>${(store.stat[g] || {})[weak] ? '苦手を鍛える' : 'まだ解いていない'}<br><b>${TYPE_INFO[weak].name}</b></span></span><button id="weak">5問</button></div>` : ''}
@@ -646,7 +748,8 @@ function home() {
       <div class="reco"><span class="rl"><span class="dot" style="background:#e0457b">${icon('words')}</span><span>文の中で覚える<br><b>単語・熟語</b></span></span><button id="vmix">10問</button></div>
     </div>
     <p class="muted" style="text-align:center">基礎トレ ${GRADES[g]} ${pool.length}問 ・ ${LEVELS[store.set.level]} ・ ${MODES[store.set.mode]}（「基礎トレ」で変更）</p>`;
-  app.querySelector('#mix').onclick = () => start(pick(pool, 10), '基礎トレ');
+  app.querySelector('#toBasic').onclick = () => show('problems');
+  app.querySelector('#toMini').onclick = () => show('mini');
   app.querySelector('#toExam').onclick = () => show('exam');
   // キャラクターを押すと、力こぶを見せてひとこと
   const hc = app.querySelector('#heroChara');
@@ -657,7 +760,7 @@ function home() {
     clearTimeout(hc._t); hc._t = setTimeout(() => hc.parentElement.querySelector('.say')?.remove(), 2600);
   };
   const w = app.querySelector('#weak'); if (w) w.onclick = () => start(pick(itemsOf(g, weak), 5), TYPE_INFO[weak].name);
-  app.querySelector('#due').onclick = () => start(pick(TYPES.flatMap((t) => itemsOf(g, t, true)).filter((it) => store.rec[it.id] && store.rec[it.id].due <= Date.now()), 10), '復習');
+  app.querySelector('#due').onclick = () => start(pick(duePool(g), 10), '復習');
   app.querySelector('#vmix').onclick = () => start(pick(allItems(g, VOCAB_TYPES), 10), '単語・熟語');
 }
 
@@ -665,6 +768,7 @@ function home() {
 function problems() {
   const g = store.grade, pool = allItems(g, BASIC_TYPES), wrong = wrongPool(g).filter((it) => !TYPE_INFO[it.type].exam).length;
   app.innerHTML = `
+    ${modeTip('basic')}
     <div class="card intro"><b>基礎トレ（脳筋トレ）</b><span>本番をすっと解くための「英検脳」の基礎。1問10〜40秒、10問ずつ。</span>
       <button class="chipbtn" id="toTips">${icon('bulb')}コツ</button></div>
     <h2>難易度</h2>
@@ -676,12 +780,13 @@ function problems() {
       <button class="big sub" id="vmix">${icon('words')}単語・熟語</button>
       <button class="big sub" id="wrong" ${wrong ? '' : 'disabled'}>${icon('repeat')}間違えた ${wrong}</button>
     </div>
-    <h2>英作文の力（本番の英作文の各段落）</h2>
+    <h2>英作文の力（英作文を1文ずつ組み立てる）</h2>
     <div class="grid">${tiles(g, ESSAY_DRILLS)}</div>
-    <h2>要約の力（本番の要約の各段階）</h2>
+    <h2>要約の力（段落を1文にまとめる）</h2>
     <div class="grid">${tiles(g, SUMMARY_DRILLS)}</div>
-    <h2>単語・熟語（文の中で覚える）</h2>
+    <h2>単語・熟語（文の中で覚える・大問1を含む）</h2>
     <div class="grid">${tiles(g, VOCAB_TYPES)}</div>`;
+  bindTips();
   app.querySelectorAll('[data-lv]').forEach((b) => b.onclick = () => { store.set.level = b.dataset.lv; save(); show('problems'); });
   app.querySelectorAll('[data-mode]').forEach((b) => b.onclick = () => { store.set.mode = b.dataset.mode; save(); show('problems'); });
   app.querySelector('#mix').onclick = () => start(pick(pool, 10), '基礎トレ');
@@ -691,38 +796,23 @@ function problems() {
   app.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => start(pick(itemsOf(g, b.dataset.t), TYPE_INFO[b.dataset.t].full ? 1 : 10), TYPE_INFO[b.dataset.t].name));
 }
 
-// ---------- 本番モード ----------
-const DAIMON1_SET = { '2': 17, p1: 18 }; // 本番の大問1の問題数
+// ---------- 本番モード（模試だけ。パート別の練習は無くした。2026-11-14） ----------
 function exam() {
-  const g = store.grade, st = store.stat[g] || {};
-  const card = (t, title, sub, n) => {
-    const its = (DATA[g] || {})[t] || [];
-    const done = its.filter((it) => store.rec[it.id]).length;
-    return `<button class="action examcard" data-x="${t}" ${its.length ? '' : 'disabled'}><span class="ai" style="background:${TYPE_LOOK[t][0]}">${icon(TYPE_LOOK[t][1])}</span>
-      <span><b>${title}</b><small>${sub}<br>${done}/${its.length}題 ・ 正解率 ${pct(st[t])}</small></span><span class="go">${icon('chev')}</span></button>`;
-  };
-  const FR = g === 'p1' ? { e: '120〜150語・POINTS 4つから2つ', s: '約200語→60〜70語' } : { e: '80〜100語・POINTS 3つ', s: '約150語→45〜55語' };
+  const g = store.grade;
   app.innerHTML = `
-    ${mockCards(g)}
-    <h2>パート別の練習</h2>
-    <div class="card intro"><b>本番と同じ形のパートを1つずつ</b><span>模試の前に、パートごとに通しで解く。基礎トレで鍛えた力を、本番の流れで使う。</span>
-      <button class="chipbtn" id="toTips">${icon('bulb')}コツ</button></div>
-    <h2>解答方式</h2>
-    <div class="seg">${Object.entries(MODES).map(([k, v]) => `<button data-mode="${k}" class="${k === store.set.mode ? 'on' : ''}">${v === '選択式' ? '選択式（段落ごとに選ぶ）' : '入力式（全文を書く）'}</button>`).join('')}</div>
-    <h2>ライティング</h2>
-    ${card('essay_full', '英作文', `${FR.e}・目安20分`)}
-    ${card('summary_full', '要約', `${FR.s}・目安15分`)}
-    <h2>語彙</h2>
-    ${card('daimon1', `大問1 ${DAIMON1_SET[g]}問セット`, '短文の語句空所補充・4択')}
-    `;
+    ${modeTip('exam')}
+    ${mockCards(g)}`;
+  bindTips();
   bindMockCards(g);
-  app.querySelectorAll('[data-mode]').forEach((b) => b.onclick = () => { store.set.mode = b.dataset.mode; save(); show('exam'); });
-  app.querySelector('#toTips').onclick = () => show('tips');
-  app.querySelectorAll('[data-x]').forEach((b) => b.onclick = () => {
-    const t = b.dataset.x, all = TYPES.includes(t) ? itemsOf(g, t, true) : [];
-    if (t === 'daimon1') start(pick(all, DAIMON1_SET[g]), `大問1（${DAIMON1_SET[g]}問）`);
-    else start(pick(all, 1), TYPE_INFO[t].name);
-  });
+}
+// ---------- ミニテスト（独立したタブ） ----------
+function miniTab() {
+  const g = store.grade;
+  app.innerHTML = `
+    ${modeTip('mini')}
+    ${miniCards(g)}`;
+  bindTips();
+  bindMockCards(g);
 }
 
 // ---------- 模擬試験（一次試験1回分。筆記は本番と同じ制限時間、リスニングは放送1回・各問10秒） ----------
@@ -750,7 +840,7 @@ function newMini(g) {
   const m = { g, set: null, mini: true, at: Date.now(), used: 0, limit: ((o.R ? MINI.min : 0) + (wt ? MINI.wmin[wt] : 0)) * 60, phase: 'rw',
     r1: o.R ? ids(pickFresh(poolOf(g, 'daimon1'), MINI.r1)) : [], r2: o.R && useR2 ? ids(pickFresh(poolOf(g, 'reading2'), 1)) : [],
     r3: o.R && !useR2 ? ids(pickFresh(poolOf(g, 'reading3'), 1)) : [], sum: wt === 'sum' ? wIt : null, essay: wt === 'essay' ? wIt : null,
-    l: o.L ? MINI.l[g].flatMap(([t, n]) => ids(pickFresh(poolOf(g, t), n))) : [], li: 0, ans: {}, text: { sum: '', essay: '' }, self: {} };
+    l: o.L ? MINI.l[g].flatMap(([t, n]) => ids(pickFresh(poolOf(g, t), n))) : [], li: 0, seed: Math.floor(Math.random() * 1e9), ans: {}, text: { sum: '', essay: '' }, self: {} };
   m.sec = (mockSecsOf(m)[0] || ['r1'])[0];
   if (!o.R && !wt) m.phase = 'l0'; // リスニングだけ
   store.mock = m; save();
@@ -768,7 +858,9 @@ function mockItem(g, id) {
   return mockIndex.m[id];
 }
 function pickFresh(arr, n) {
-  const used = store.mockUsed;
+  // 模試で使ったものと、基礎トレで解いたもの（英作文・要約は1文ずつの親）を後回しにする（2026-11-14 監査: 模範を見た題で自己採点すると Lv4・5 が甘くなる）
+  const seen = new Set(Object.keys(store.rec).map((k) => k.split('#')[0]));
+  const used = new Proxy({}, { get: (_, id) => store.mockUsed[id] || seen.has(id) });
   return [...shuffle(arr.filter((it) => !used[it.id])), ...shuffle(arr.filter((it) => used[it.id]))].slice(0, n);
 }
 // 1回分を組むのに足りない部分の一覧
@@ -797,12 +889,22 @@ function newMock(g, set = null) {
     r1: ids(r1), r2: ids(ord(P('reading2'), c.r2)),
     r3: ['A', 'B'].map((p) => ord(r3.filter((x) => x.part === p), 1)[0].id),
     sum: ord(P('summary_full'), 1)[0].id, essay: ord(P('essay_full'), 1)[0].id,
-    l: c.l.flatMap(([t, n]) => ids(ord(P(t), n))), li: 0, ans: {}, text: { sum: '', essay: '' }, self: {} };
+    l: c.l.flatMap(([t, n]) => ids(ord(P(t), n))), li: 0, seed: Math.floor(Math.random() * 1e9), ans: {}, text: { sum: '', essay: '' }, self: {} };
   save();
 }
 // 採点する設問の一覧: { key, sec, no, q, choices, answer, it }
+// 選択肢の並びは回ごとに固定で混ぜる（データの正解の位置に規則が出ても、並びから当てられないように。2026-11-14 監査）
+function mockMix(m, q) {
+  let x = (m.seed || 0) ^ 0x9e3779b9;
+  for (const ch of q.key) x = Math.imul(x ^ ch.charCodeAt(0), 2654435761) >>> 0;
+  const rnd = () => { x = (x + 0x6d2b79f5) >>> 0; let t = Math.imul(x ^ (x >>> 15), 1 | x); t ^= t + Math.imul(t ^ (t >>> 7), 61 | t); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const ord = q.choices.map((c, i) => i);
+  for (let i = ord.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ord[i], ord[j]] = [ord[j], ord[i]]; }
+  return { ...q, choices: ord.map((i) => q.choices[i]), answer: ord.indexOf(q.answer) };
+}
 function mockQuestions(m) {
   const g = m.g, out = []; let no = 0, ln = 0;
+  const push = out.push.bind(out); out.push = (q) => push(mockMix(m, q));
   m.r1.forEach((id) => { const it = mockItem(g, id); out.push({ key: id, sec: 'r1', no: ++no, it, q: it.q, choices: it.choices, answer: it.answer }); });
   m.r2.forEach((id) => { const it = mockItem(g, id); it.blanks.forEach((b, k) => out.push({ key: `${id}#${k}`, sec: 'r2', no: ++no, it, q: '', choices: b.choices, answer: b.answer })); });
   m.r3.forEach((id) => { const it = mockItem(g, id); it.questions.forEach((q, k) => out.push({ key: `${id}#${k}`, sec: 'r3', no: ++no, it, q: q.q, choices: q.choices, answer: q.answer })); });
@@ -883,7 +985,7 @@ function mockRW(m) {
   }
   const finish = () => { if (!confirm(m.l.length ? '筆記を終えて、リスニングに進みますか？（筆記には戻れません）' : '筆記を終えますか？（戻れません）')) return; afterRW(m); };
   app.querySelector('#mend').onclick = finish; const f2 = app.querySelector('#mend2'); if (f2) f2.onclick = finish;
-  app.querySelector('#mquit').onclick = () => { if (!confirm('この模試をやめますか？（答えは記録されません）')) return; store.mock = null; save(); show('exam'); };
+  app.querySelector('#mquit').onclick = () => { if (!confirm('この模試をやめますか？（答えは記録されません）')) return; const wasMini = m.mini; store.mock = null; save(); show(wasMini ? 'mini' : 'exam'); };
   mockTick = setInterval(() => {
     if (document.visibilityState !== 'visible') return;
     const el = document.getElementById('mtimer'); if (!el || store.mock !== m) return clearInterval(mockTick);
@@ -938,7 +1040,7 @@ function mockListen(m) {
     ${u.qs.map((q) => `<div class="card">${mockChoices(q, m)}</div>`).join('')}
     <p class="muted" style="text-align:center">${m.li + 1} / ${units.length}</p>`;
   bindMockChoices(m);
-  app.querySelector('#lstop').onclick = () => { mockTok++; if (hasTTS) speechSynthesis.cancel(); m.phase = 'l0'; save(); show('exam'); };
+  app.querySelector('#lstop').onclick = () => { mockTok++; if (hasTTS) speechSynthesis.cancel(); m.phase = 'l0'; save(); show(m.mini ? 'mini' : 'exam'); };
 }
 async function playListening(m) {
   const tok = ++mockTok, units = mockUnits(m);
@@ -989,14 +1091,25 @@ function mockFinish(m) {
   const r = { at: Date.now(), g: m.g, set: m.set, mini: !!m.mini, R: sc((q) => q.sec[0] === 'r'), L: sc((q) => q.sec.startsWith('listen')), W: [w('sum') + w('essay'), (m.sum ? 16 : 0) + (m.essay ? 16 : 0)],
     parts: Object.fromEntries(['r1', 'r2', 'r3', 'listen1', 'listen2', 'listen3'].map((s) => [s, sc((q) => q.sec === s)]).filter(([, v]) => v[1])),
     sum: w('sum'), essay: w('essay'), min: Math.round(m.used / 60) };
+  const lvBefore = growLv(m.g);
   store.mocks.push(r);
   for (const id of [...m.r1, ...m.r2, ...m.r3, m.sum, m.essay, ...m.l].filter(Boolean)) store.mockUsed[id] = 1;
   store.lastMock = { ...m, done: r.at }; store.mock = null;
-  gainXp(m.mini ? 30 : 100); save();
-  mockResult(store.mocks.length - 1);
+  const up = growCommit(m.g, lvBefore); save();
+  mockResult(store.mocks.length - 1, up);
+}
+// 結果画面の成長の表示: Lv が上がったときは知らせ、そうでなければ次の Lv までに足りないものを見せる
+function growCard(r, up) {
+  const g = r.g, nd = growNeed(g), L = growLv(g);
+  return `<section class="hero" style="margin:12px 0"><div class="chara-wrap">${charaImg(L)}</div>
+    ${up ? `<div class="growup">成長した！ ${GRADES[g]} 脳筋 Lv.${up.from} → Lv.${up.to}（${STAGE_NAME[up.to - 1]}）</div>` : ''}
+    <div class="xpbar" style="margin-top:0"><div class="lab"><span>${GRADES[g]} 脳筋 Lv.${L} ・ ${STAGE_NAME[L - 1]}</span><span>${nd.next ? `Lv.${nd.next} まで` : 'Lv.5 達成！'}</span></div>
+    <div class="tr"><i style="width:${Math.round(nd.ratio * 100)}%"></i></div>
+    <div class="lab" style="margin:4px 0 0;opacity:.85"><span>${h(nd.head)}</span></div>
+    ${nd.rows.length ? `<div class="growlist">${nd.rows.map((x) => `<span class="${x.ok ? 'okl' : ''}">${h(x.t)}</span>`).join('')}</div>` : ''}</div></section>`;
 }
 const MOCK_PN = { r1: '大問1', r2: '大問2', r3: '大問3', listen1: 'L 第1部', listen2: 'L 第2部', listen3: 'L 第3部' };
-function mockResult(idx) {
+function mockResult(idx, up = null) {
   const r = store.mocks[idx], m = store.lastMock && store.lastMock.done === r.at ? store.lastMock : null;
   document.body.classList.add('quiz');
   const bar = (name, [ok, n]) => { const p = n ? Math.round((ok / n) * 100) : 0; return `<div class="mres"><b>${name}</b><div class="mbar"><i style="width:${p}%" class="${p >= 70 ? 'ok' : p >= 60 ? 'mid' : 'low'}"></i><u></u></div><span>${ok}/${n}（${p}%）</span></div>`; };
@@ -1014,36 +1127,50 @@ function mockResult(idx) {
     <div class="card">${r.R[1] ? bar('リーディング', r.R) : ''}${r.L[1] ? bar('リスニング', r.L) : ''}${r.W[1] ? bar('ライティング', r.W) : ''}
       <p class="muted" style="margin:10px 0 0">縦線は正答率65%。合格の目安は各技能でおよそ6〜7割（英検協会の公式な換算ではない）。${r.W[1] ? `ライティングは自己採点（${r.W[1] === 32 ? `要約 ${r.sum}/16・英作文 ${r.essay}/16` : `${r.W[0]}/16`}）。` : ''}</p></div>
     <div class="card">${Object.entries(r.parts).map(([k, v]) => bar(MOCK_PN[k], v)).join('')}</div>
+    ${growCard(r, up)}
     ${review}
-    <button class="big" id="mback" style="margin:16px 0 40px">本番タブへ</button>`;
+    <button class="big" id="mback" style="margin:16px 0 40px">${r.mini ? 'ミニテストへ' : '本番タブへ'}</button>`;
   window.scrollTo(0, 0);
-  app.querySelector('#mback').onclick = () => show('exam');
+  app.querySelector('#mback').onclick = () => show(r.mini ? 'mini' : 'exam');
+  if (up) evolve(up.from, up.to); // Lv が上がったら成長の演出
 }
-// 本番タブの先頭に出す模擬試験のカード
-function mockCards(g) {
-  const m = store.mock, hist = store.mocks.filter((r) => r.g === g).slice(-5).reverse();
+// 途中の模擬試験・ミニテストがあれば、そのカード（本番・ミニテストのどちらのタブにも出す。新しく始めると上書きされるため）
+function resumeCard(g) {
+  const m = store.mock;
   if (m && m.g === g) return `<div class="card mockcard"><b>${m.mini ? 'ミニテスト' : '模擬試験'}の途中</b><span>${mockName(m)}・${m.phase === 'rw' ? `筆記 残り ${mmss(m.limit - m.used)}` : m.phase === 'wself' ? '自己採点' : 'リスニング'}</span>
     <button class="big" id="mcont">続きから</button></div>`;
+  return '';
+}
+const histRows = (g, mini) => { const hist = store.mocks.filter((r) => r.g === g && !!r.mini === mini).slice(-5).reverse();
+  return hist.length ? `<div class="card"><div class="label">これまでの結果</div>${hist.map((r) => `<button class="linkbtn mhist" data-mr="${store.mocks.indexOf(r)}">${new Date(r.at).toLocaleDateString('ja-JP')} ${r.mini ? 'ミニ' : r.set ? MOCK_SETS.find(([k]) => k === r.set)[1] : 'おまかせ'}：${[r.R[1] ? `R ${r.R[0]}/${r.R[1]}` : '', r.L[1] ? `L ${r.L[0]}/${r.L[1]}` : '', r.W[1] ? `W ${r.W[0]}/${r.W[1]}` : ''].filter(Boolean).join('・')}</button>`).join('')}</div>` : ''; };
+// 本番タブ: 模擬試験だけ（予測模試3回＋おまかせ模試）
+function mockCards(g) {
+  const rc = resumeCard(g); if (rc) return rc;
   const setBtns = MOCK_SETS.map(([k, name]) => { const s = mockShort(g, k), done = store.mocks.some((r) => r.g === g && r.set === k);
     return `<button class="action examcard" data-ms="${k}" ${s.length ? 'disabled' : ''}><span class="ai" style="background:#ff5f3a">${icon('bolt')}</span><span><b>${name}${done ? ' ✓' : ''}</b><small>${s.length ? '準備中' : '次回の試験の予測（話題・形式）'}</small></span><span class="go">${icon('chev')}</span></button>`; }).join('');
   const short = mockShort(g), fresh = mockFreshCount(g);
+  return `<div class="card intro"><b>模擬試験（一次試験 1回分）</b><span>本番と同じ問題数・形式・制限時間（筆記 ${MOCK[g].min}分 → リスニング 放送1回）。最後にライティングを自己採点して、技能ごとの正答率を出す。</span></div>
+    ${setBtns}
+    <button class="action examcard" data-ms="" ${short.length ? 'disabled' : ''}><span class="ai" style="background:#2b3aa8">${icon('repeat')}</span><span><b>おまかせ模試</b><small>${short.length ? '準備中（' + short.join('・') + '）' : `まだ解いていない問題で あと${fresh}回分`}</small></span><span class="go">${icon('chev')}</span></button>
+    ${histRows(g, false)}`;
+}
+// ミニテストタブ
+function miniCards(g) {
+  const rc = resumeCard(g); if (rc) return rc;
   const o = store.set.mini, ms = miniShort(g), lq = MINI.l[g].reduce((a, [t, n]) => a + (t === 'listen2' && g === 'p1' ? n * 2 : n), 0);
   const min = (o.R ? MINI.min : 0) + (o.W ? MINI.wmin[o.wt] : 0) + (o.L ? Math.ceil(lq * 0.9) : 0);
   return `<div class="card mini"><b>ミニテスト</b><span class="muted">本番と同じ形を小さく。技能を選んで、1つだけでも組み合わせても解ける</span>
     <div class="chips minisk">${[['R', `リーディング<small>大問1 ${MINI.r1}問・長文1題・${MINI.min}分</small>`], ['W', `ライティング<small>${o.wt === 'essay' ? `英作文1題・${MINI.wmin.essay}分` : `要約1題・${MINI.wmin.sum}分`}</small>`], ['L', `リスニング<small>${lq}問・約${Math.ceil(lq * 0.9)}分</small>`]].map(([k, v]) => `<button data-sk="${k}" class="${o[k] ? 'on' : ''}">${v}</button>`).join('')}</div>
     ${o.W ? `<div class="seg">${[['sum', '要約'], ['essay', '英作文']].map(([k, v]) => `<button data-wt="${k}" class="${o.wt === k ? 'on' : ''}">${v}</button>`).join('')}</div>` : ''}
     <button class="big" data-mini="1" ${ms.length ? 'disabled' : ''} style="margin-top:12px">${ms.length ? (ms[0] === '技能を選ぶ' ? '技能を1つ以上選ぶ' : `準備中（${ms.join('・')}）`) : `ミニテストを始める（約${min}分）`}</button></div>
-    <div class="card intro"><b>模擬試験（一次試験 1回分）</b><span>本番と同じ問題数・形式・制限時間（筆記 ${MOCK[g].min}分 → リスニング 放送1回）。最後にライティングを自己採点して、技能ごとの正答率を出す。</span></div>
-    ${setBtns}
-    <button class="action examcard" data-ms="" ${short.length ? 'disabled' : ''}><span class="ai" style="background:#2b3aa8">${icon('repeat')}</span><span><b>おまかせ模試</b><small>${short.length ? '準備中（' + short.join('・') + '）' : `まだ解いていない問題で あと${fresh}回分`}</small></span><span class="go">${icon('chev')}</span></button>
-    ${hist.length ? `<div class="card"><div class="label">これまでの結果</div>${hist.map((r) => `<button class="linkbtn mhist" data-mr="${store.mocks.indexOf(r)}">${new Date(r.at).toLocaleDateString('ja-JP')} ${r.mini ? 'ミニ' : r.set ? MOCK_SETS.find(([k]) => k === r.set)[1] : 'おまかせ'}：${[r.R[1] ? `R ${r.R[0]}/${r.R[1]}` : '', r.L[1] ? `L ${r.L[0]}/${r.L[1]}` : '', r.W[1] ? `W ${r.W[0]}/${r.W[1]}` : ''].filter(Boolean).join('・')}</button>`).join('')}</div>` : ''}`;
+    ${histRows(g, true)}`;
 }
 function bindMockCards(g) {
   const c = app.querySelector('#mcont'); if (c) c.onclick = () => mockView();
   app.querySelectorAll('[data-ms]').forEach((b) => b.onclick = () => { newMock(g, b.dataset.ms || null); mockView(); });
   const mi = app.querySelector('[data-mini]'); if (mi) mi.onclick = () => { newMini(g); mockView(); };
-  app.querySelectorAll('[data-sk]').forEach((b) => b.onclick = () => { store.set.mini[b.dataset.sk] = !store.set.mini[b.dataset.sk]; save(); show('exam'); });
-  app.querySelectorAll('[data-wt]').forEach((b) => b.onclick = () => { store.set.mini.wt = b.dataset.wt; save(); show('exam'); });
+  app.querySelectorAll('[data-sk]').forEach((b) => b.onclick = () => { store.set.mini[b.dataset.sk] = !store.set.mini[b.dataset.sk]; save(); show('mini'); });
+  app.querySelectorAll('[data-wt]').forEach((b) => b.onclick = () => { store.set.mini.wt = b.dataset.wt; save(); show('mini'); });
   app.querySelectorAll('[data-mr]').forEach((b) => b.onclick = () => mockResult(+b.dataset.mr));
 }
 
@@ -1123,10 +1250,10 @@ function trend(days = 14) {
     <p class="muted" style="margin:4px 0 0">青い棒: 解いた数（橙の点線が目標） ・ 緑の線: 正解率</p>`;
 }
 function stagesView(id) {
-  const L = levelOf(store.xp), now = stageOf(L);
-  return `<div class="stages">${STAGE_LV.map((lv, i) => `<div class="${i + 1 > now ? 'lock' : i + 1 === now ? 'now' : ''}">${charaImg(i + 1, '', id)}${i + 1 > now ? `Lv.${lv}で解放` : STAGE_NAME[i]}</div>`).join('')}</div>`;
+  const g = store.grade, now = growLv(g);
+  return `<div class="stages">${STAGE_NAME.map((nm, i) => `<div class="${i + 1 > now ? 'lock' : i + 1 === now ? 'now' : ''}">${charaImg(i + 1, '', id)}${i + 1 > now ? `Lv.${i + 1}<br>${growCond(g, i + 1)}` : nm}</div>`).join('')}</div>`;
 }
-const charaPicker = () => `<div class="pick">${CHARAS.map((c) => `<button data-chara="${c.id}" class="${c.id === curChara()?.id ? 'on' : ''}">${charaImg(stageOf(levelOf(store.xp)), '', c.id)}${h(c.name)}</button>`).join('')}</div>`;
+const charaPicker = () => `<div class="pick">${CHARAS.map((c) => `<button data-chara="${c.id}" class="${c.id === curChara()?.id ? 'on' : ''}">${charaImg(lv(), '', c.id)}${h(c.name)}</button>`).join('')}</div>`;
 function statsView() {
   const g = store.grade, tot = gradeTotal(g), st = store.stat[g] || {};
   const all = Object.values(store.daily).reduce((a, o) => ({ n: a.n + o.n, ok: a.ok + o.ok, ms: a.ms + o.ms }), { n: 0, ok: 0, ms: 0 });
@@ -1136,13 +1263,13 @@ function statsView() {
       <div><small>合計</small><b>${all.n}問</b><small>${minutes(all.ms)}</small></div>
       <div><small>${GRADES[g]} 正解率</small><b>${pct(tot)}</b><small>平均 ${secAvg(tot)}</small></div>
     </div>
-    <h2>キャラクターの成長（脳筋 Lv.${levelOf(store.xp)}）</h2>
-    <div class="card">${stagesView()}<p class="muted" style="margin:10px 0 0">解くと XP がたまり、脳筋レベルが上がります（正解10・不正解3・Lv3の正解と入力式の正解は+5）。キャラクターは「設定」で変えられます。</p></div>
+    <h2>キャラクターの成長（${GRADES[g]} 脳筋 Lv.${lv()}）</h2>
+    <div class="card">${stagesView()}<p class="muted" style="margin:10px 0 0">${growNeed(g).next ? `次の Lv.${growNeed(g).next}: ${h(growNeed(g).head)}${growNeed(g).rows.map((r) => `<br>${h(r.t)}`).join('')}` : h(growNeed(g).head)}<br>級ごとに別で、一度上がったら下がりません。キャラクターは歯車の「設定」で変えられます。</p></div>
     <h2>学習カレンダー（濃いほど多く解いた日）</h2><div class="card">${calendar()}</div>
     <h2>この2週間</h2><div class="card">${trend()}</div>
     <h2>${GRADES[g]} 種類ごと</h2>
     <div class="card"><table class="t"><tr><th>種類</th><th>解答</th><th>正解率</th><th>平均</th></tr>
-      ${TYPES.map((t) => `<tr><td>${TYPE_INFO[t].name}</td><td>${(st[t] || {}).n || 0}</td><td>${pct(st[t])}</td><td>${secAvg(st[t])}</td></tr>`).join('')}</table></div>
+      ${TYPES.filter((t) => BASIC_TYPES.includes(t) || (st[t] || {}).n).map((t) => `<tr><td>${TYPE_INFO[t].name}</td><td>${(st[t] || {}).n || 0}</td><td>${pct(st[t])}</td><td>${secAvg(st[t])}</td></tr>`).join('')}</table></div>
     <h2>バッジ（${Object.keys(store.badges).length}/${BADGES.length}）</h2>
     <div class="badges">${BADGES.map((b) => `<div class="badge ${store.badges[b.id] ? 'got' : ''}"><i>${b.icon}</i><b>${b.name}</b><small>${store.badges[b.id] ? store.badges[b.id] : b.how}</small></div>`).join('')}</div>`;
 }
@@ -1158,7 +1285,7 @@ function settings() {
   const auto = (key, lang) => `<button data-vk="${key}" data-vn="" class="${store.set[key] ? '' : 'on'}"><span>自動<br><small>いま: ${h(pickVoice(lang)?.name || 'なし')}</small></span><span class="ck"></span></button>`;
   app.innerHTML = `
     <h2 style="margin-top:8px">キャラクター</h2>
-    <div class="card">${charaPicker()}<p class="muted" style="margin:10px 0 0">成長の段階（脳筋 Lv.${levelOf(store.xp)}）はどのキャラクターでも同じです。</p></div>
+    <div class="card">${charaPicker()}<p class="muted" style="margin:10px 0 0">成長の段階（${GRADES[store.grade]} 脳筋 Lv.${lv()}）はどのキャラクターでも同じです。</p></div>
     <h2>学習</h2>
     <div class="card" style="padding:4px 16px">
       <div class="setrow"><span>1日の目標</span>${chips('goal', [5, 10, 20, 30, 50].map((v) => [v, v + '問']), store.set.goal)}</div>
@@ -1211,7 +1338,7 @@ function judgeInput(it, text) {
 // 問題文を読み上げ用の英語にする: 空所は blank、[[ ]] は外す、（日本語）は読まない、TOPIC: などの見出しは区切りに
 function speakableQ(it) {
   return it.q.replace(/___/g, ' blank ').replace(/\[\[|\]\]/g, '').replace(/[（(][^）)]*[）)]/g, '')
-    .replace(/^(TOPIC|Position|POINT)S?:\s*/gim, '$1. ').replace(/\n+/g, '. ');
+    .replace(/^.*【.*$/gm, '').replace(/^(TOPIC|Position|POINT|So far)S?:\s*/gim, '$1. ').replace(/\n+/g, '. ');
 }
 // 🔊 ボタン（data-say に読む英文を入れる）
 const spk = (text) => `<button class="spk" data-say="${h(text)}" aria-label="英語を読み上げる">${icon('speaker')}</button>`;
@@ -1225,7 +1352,7 @@ function bindSpeakers(root) {
 }
 const isEnglish = (t) => /[A-Za-z]/.test(t) && !/[ぁ-んァ-ン一-龥]/.test(t);
 function qToHtml(it) { return h(it.q).replace(/___/g, '<b class="blank">＿＿＿</b>').replace(/\[\[(.+?)\]\]/g, '<b class="mark">$1</b>'); }
-const react = (correct) => `<span class="react">${charaImg(stageOf(levelOf(store.xp)), correct ? 'jump' : 'shake')}</span>`;
+const react = (correct) => `<span class="react">${charaImg(lv(), correct ? 'jump' : 'shake')}</span>`;
 function explainBox(it) {
   // 回答例のあとに「なぜこの英文になるのか」を出す
   const alt = /別の言い方[:：]\s*(.+)$/.exec(it.explain || '');
@@ -1401,7 +1528,7 @@ function question() {
     timerEl.classList.toggle('over', goal > 0 && sec > goal);
   };
   tick(); clearInterval(s.tick); s.tick = setInterval(tick, 250);
-  app.querySelector('#quit').onclick = () => show(tab);
+  app.querySelector('#quit').onclick = () => { const s = session; show(tab); if (s && s.lvTo) evolve(s.lvFrom, s.lvTo); };
   const stopTimer = () => {
     clearInterval(s.tick);
     const ms = Math.min(Date.now() - t0, MAX_MS), inTime = !goal || ms <= goal * 1000;
@@ -1489,24 +1616,24 @@ function result() {
       <div><small>1問平均</small><b>${(s.ms / s.items.length / 1000).toFixed(1)}秒</b></div>
       ${store.set.timeMul === 0 ? '' : `<div><small>目標内</small><b>${s.inTime}/${s.items.length}</b></div>`}
     </div>
-    <div class="gain">${charaImg(stageOf(levelOf(store.xp)), 'jump').replace('class="chara', 'style="width:56px" class="chara')}+${s.xp || 0} XP</div>
-    ${s.lvTo ? `<div class="lvup">レベルアップ！ 脳筋 Lv.${s.lvFrom} → Lv.${s.lvTo}</div>` : ''}
+    <div class="gain">${charaImg(lv(), 'jump').replace('class="chara', 'style="width:56px" class="chara')}${GRADES[store.grade]} 脳筋 Lv.${lv()}</div>
+    ${s.lvTo ? `<div class="lvup">成長した！ 脳筋 Lv.${s.lvFrom} → Lv.${s.lvTo}（${STAGE_NAME[s.lvTo - 1]}）</div>` : ''}
     <section class="hero"><div class="goal">${ring(td.n, store.set.goal, true)}<div class="meta">
       <div style="font-size:18px;font-weight:900">${st.todayDone ? `連続 ${st.n} 日！` : `目標まで あと ${store.set.goal - td.n} 問`}</div>
-      <div>間違えた問題は、10分後から優先して出ます</div></div></div>${xpBar()}</section>
+      <div>間違えた問題は、10分後から優先して出ます</div></div></div>${growBar()}</section>
     ${s.wrong.length ? `<button class="big" id="retry">間違えた ${s.wrong.length} 問をもう一度</button>` : ''}
     <button class="big sub" id="more">続けて 10問</button>`;
   app.querySelector('#back').onclick = () => show(tab);
   const r = app.querySelector('#retry'); if (r) r.onclick = () => start(shuffle(s.wrong), 'やり直し');
   app.querySelector('#more').onclick = () => start(pick(allItems(store.grade, BASIC_TYPES), 10), '基礎トレ');
-  // 段階が上がったら、成長の演出を出す
-  if (s.lvTo && stageOf(s.lvTo) > stageOf(s.lvFrom)) evolve(stageOf(s.lvFrom), stageOf(s.lvTo));
+  // Lv が上がったら（キャラの段階 ＝ Lv）、成長の演出を出す
+  if (s.lvTo) evolve(s.lvFrom, s.lvTo);
 }
 function evolve(from, to) {
   const el = document.createElement('div');
   el.className = 'evo';
   el.innerHTML = `<div><div class="rays"></div><div class="stage">${charaImg(from, 'old')}${charaImg(to, 'new')}</div>
-    <h3>${h(curChara()?.name || '')}が成長した！</h3><p>第${to}段階「${STAGE_NAME[to - 1]}」</p>
+    <h3>${h(curChara()?.name || '')}が成長した！</h3><p>Lv.${to}「${STAGE_NAME[to - 1]}」</p>
     <button class="big" id="evoOk">${icon('bolt')}この調子で鍛える</button></div>`;
   document.body.appendChild(el);
   el.querySelector('#evoOk').onclick = () => el.remove();
@@ -1643,7 +1770,7 @@ function driveMenu() {
       画面は点けたままになります。ロックすると止まることがあります。${SR ? '' : '<br>この端末・開き方では音声入力が使えないため、口に出して答える方式で進みます。'}</p>
     </div>
     <h2>出す種類</h2>
-    <div class="card"><div class="chips">${TYPES.map((t) => `<button data-t="${t}" class="${sel.has(t) ? 'on' : ''}">${TYPE_INFO[t].name}（${itemsOf(g, t).length}）</button>`).join('')}</div></div>
+    <div class="card"><div class="chips">${BASIC_TYPES.filter((t) => itemsOf(g, t).length).map((t) => `<button data-t="${t}" class="${sel.has(t) ? 'on' : ''}">${TYPE_INFO[t].name}（${itemsOf(g, t).length}）</button>`).join('')}</div></div>
     <div class="footer"><button class="big" id="go">${icon('mic')}スタート</button></div>`;
   app.querySelector('#back').onclick = () => show('home');
   app.querySelectorAll('.chips [data-t]').forEach((b) => b.onclick = () => b.classList.toggle('on'));
@@ -1719,7 +1846,7 @@ withGrade(() => {
     show('problems'); start(pick(allItems(store.grade, ['reason']), 10), '理由の選択');
     if (hsh === 'answered') { const it = session.items[0]; app.querySelector(`.choice[data-i="${it.answer}"]`).click(); }
   }
-  else show(TABS.some(([k]) => k === hsh) ? hsh : 'home');
+  else show(TABS.some(([k]) => k === hsh) || hsh === 'settings' ? hsh : 'home');
 });
 </script>
 </body>
