@@ -298,6 +298,46 @@
   details.modetip summary svg { width: 18px; height: 18px; color: var(--orange1); }
   details.modetip ul { padding-left: 20px; margin: 4px 0 0; font-size: 14.5px; line-height: 1.75; }
   details.modetip .tiplead { margin: 8px 0 0; font-size: 14px; color: var(--muted, #5d6578); }
+  details.tipsub { margin: 14px 0 0; padding-top: 10px; border-top: 1px solid var(--line); }
+  details.tipsub > summary { font-weight: 800; font-size: 14px; color: var(--indigo); cursor: pointer; }
+  details.tipsub .tnote { margin: 8px 0; font-size: 12.5px; line-height: 1.6; color: var(--sub); }
+  details.tipsub .tsw { display: flex; gap: 6px; margin: 10px 0 6px; }
+  details.tipsub .tsw button { border: 0; background: var(--indigo-soft); color: var(--indigo); border-radius: 999px; padding: 7px 14px; font-weight: 800; font-size: 13px; }
+  details.tipsub .tsw button.on { background: var(--indigo); color: #fff; }
+  .band { flex: 1; min-width: 0; display: flex; height: 16px; border-radius: 5px; overflow: hidden; background: var(--line); }
+  .band i { display: block; min-width: 2px; border-left: 1px solid #fff; }
+  .band i:first-child { border-left: 0; }
+  .prow { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; padding: 7px 0; font: inherit; font-size: 13px; text-align: left; color: var(--ink); }
+  .prow .pn { flex: 0 0 74px; font-weight: 800; font-size: 12.5px; }
+  .prow .pc { flex: 0 0 42px; text-align: right; color: var(--sub); font-size: 12.5px; }
+  .prow::after { content: '▾'; color: var(--faint); font-size: 12px; }
+  .prow[aria-expanded="true"]::after { content: '▴'; }
+  .pdet { background: var(--bg); border-radius: 10px; padding: 8px 10px; margin: 0 0 6px; }
+  .pdet[hidden] { display: none; }
+  .pills { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; }
+  .pill i, .tlg i:not(.dot) { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 4px; vertical-align: baseline; }
+  .ptip { margin: 6px 0 0; font-size: 12.5px; line-height: 1.6; }
+  .tlg { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 0 0; font-size: 12px; color: var(--sub); }
+  .bgr { margin: 14px 0 2px; font-size: 13px; font-weight: 800; color: var(--navy2); }
+  .bpart { margin: 6px 0 10px; padding: 8px 10px; background: var(--bg); border-radius: 10px; }
+  .bph { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 800; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .bph > span:first-child { flex: 0 0 auto; }
+  .brow { margin-top: 7px; font-size: 12.5px; }
+  .brow .bt { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+  .brow .bt span { color: var(--sub); white-space: nowrap; }
+  .brow .band { display: flex; width: 100%; }
+  .brow em { font-style: normal; font-weight: 900; } .brow em.ok { color: var(--ok); } .brow em.wn { color: var(--orange1); }
+  table.mt { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 3px; font-size: 12px; margin-top: 4px; }
+  .mt th { font-weight: 700; font-size: 12px; line-height: 1.2; color: var(--sub); }
+  .mt td.fn { font-weight: 800; font-size: 12px; }
+  .mt td.c { height: 32px; text-align: center; border-radius: 7px; background: var(--bg); }
+  .mt td.c.past { box-shadow: inset 0 0 0 2px var(--indigo); }
+  .mt td.c.miss { background: var(--ngbg); color: var(--ng); font-weight: 900; font-size: 15px; }
+  .dot { display: inline-block; border-radius: 50%; background: var(--indigo); vertical-align: middle; }
+  .dot.s1 { width: 6px; height: 6px; } .dot.s2 { width: 11px; height: 11px; } .dot.s3 { width: 17px; height: 17px; }
+  .tlg .dot { margin-right: 4px; }
+  .lgbox { display: inline-block; width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 2px var(--indigo); margin-right: 4px; vertical-align: middle; }
+  .lgng { display: inline-block; width: 12px; text-align: center; color: var(--ng); font-weight: 900; margin-right: 4px; }
   details.modetip h4 { margin: 12px 0 0; font-size: 14px; font-weight: 800; color: var(--orange1); }
   .entry { margin: 10px 0; }
   .entry .ai { width: 52px; height: 52px; border-radius: 16px; }
@@ -315,7 +355,7 @@
 <nav class="tabs" id="tabs"></nav>
 <script>
 const CHARAS = [{"id":"standard","name":"スタンダード"},{"id":"c2","name":"ブラウン"},{"id":"c3","name":"ホワイト"},{"id":"c4","name":"宇宙人"}];
-const BUILD = "20261114-f8aea021";
+const BUILD = "20261115-641341f4";
 // 問題データは級ごとの別ファイル（data-2.js / data-p1.js）。選んだ級だけを読む（2026-11-14 index.html が 3.2MB になったため）
 const DATA = {};
 const dataLoading = {};
@@ -324,7 +364,7 @@ function loadGrade(g) {
   return (dataLoading[g] ||= new Promise((ok, ng) => {
     const s = document.createElement('script');
     s.src = `data-${g}.js?v=${BUILD}`;
-    s.onload = () => { const d = (self.EIKEN_DATA || {})[g]; if (d) { addSteps(d); DATA[g] = d; ok(); } else { delete dataLoading[g]; ng(new Error('no data')); } };
+    s.onload = () => { const d = (self.EIKEN_DATA || {})[g]; if (d) { addDerived(d); DATA[g] = d; ok(); } else { delete dataLoading[g]; ng(new Error('no data')); } };
     s.onerror = () => { delete dataLoading[g]; ng(new Error('load failed')); };
     document.head.appendChild(s);
   }));
@@ -339,43 +379,24 @@ function withGrade(fn) {
 }
 
 // ---------- 種類・設定の定義 ----------
-const TYPE_INFO = {
-  // sec は選択式の目標時間（秒）
-  reason:      { name: '理由の選択',     hint: '立場を支える理由として正しい文を選ぶ', write: '立場を支える理由を英語1文で書く', sec: 45 },
-  summary:     { name: '要約の選択',     hint: '段落を1文にまとめた最もよい要約を選ぶ', write: '段落の要点を英語1文で書く', sec: 60 },
-  paraphrase:  { name: '言い換え',       hint: '同じ意味のまま、構文ごと言い換えた文を選ぶ（1語を同義語に替えただけの文は不可）', write: '同じ意味で、構文ごと言い換えた英文を書く', sec: 45 },
-  error:       { name: '誤りのない文',   hint: '時制・数・冠詞・スペル・語法に誤りのない文を選ぶ', write: '日本語に合う、誤りのない英文を書く', sec: 45 },
-  ja2en:       { name: '和文→英文',      hint: '日本語に合う自然な英文を選ぶ', write: '日本語を英文にする', sec: 40 },
-  template:    { name: '型の穴埋め',     hint: '序論・結論の定型文の空所を埋める', sec: 25, cloze: true },
-  connector:   { name: 'つなぎ語',       hint: '文と文をつなぐ語を選ぶ', sec: 25, cloze: true },
-  collocation: { name: 'コロケーション', hint: '自然に組み合わさる語を選ぶ', sec: 25, cloze: true },
-  vocab_je:    { name: '単語・熟語 和→英', hint: '（ ）の日本語に合う英語の語句を入れる', sec: 20, cloze: true, vocab: true },
-  vocab_ej:    { name: '単語・熟語 英→和', hint: '色の付いた語句の、この文での意味を答える', sec: 20, cloze: true, vocab: true, ja: true },
-  // 基礎トレの追加5種（本番の段階のうち、基礎トレが無かった力。2026-11-13）
-  q_read:     { name: '問いを読む',       hint: '何について賛否を言う問題かを選ぶ', sec: 25, choiceOnly: true },
-  support:    { name: '具体例で支える',   hint: '理由を支える説明・具体例として最もよい文を選ぶ', write: '理由を支える説明・具体例を英語1文で書く', sec: 35 },
-  para_role:  { name: '段落の役割',       hint: 'この段落の役割を選ぶ（段落のほとんどが1つの事例や数値なら『具体例・データ』、それ以外は主張の中身で決める）', sec: 25, choiceOnly: true },
-  generalize: { name: '一般化する',       hint: '色の付いた具体的な部分を、要約で使う一般的な言い方にする', sec: 25, cloze: true },
-  length_adj: { name: '語数を調整する',   hint: '同じ意味のまま、より短く言い換えた文を選ぶ', write: '同じ意味のまま、より短い英文に書き換える', sec: 35 },
-  // 旧本番問題を基礎トレの時間に圧縮したもの（essay_full・summary_full の steps から読み込み時に作る。2026-11-14）
-  essay_step: { name: '英作文を1文ずつ', hint: '英作文のこの段階に入る最もよい1文を選ぶ', sec: 40, choiceOnly: true },
-  sum_step:   { name: '要約を1段落ずつ', hint: 'この段落を1文に要約した最もよいものを選ぶ', sec: 40, choiceOnly: true },
-  // 大問1（語彙）は基礎トレの「単語・熟語」の欄で1問ずつ解く
-  daimon1:      { name: '大問1 語彙', hint: '文脈に合う語句を選ぶ（本番の大問1と同じ形）', sec: 25, cloze: true, vocab: true },
-  // 本番形式（通し）は模試・ミニテストだけで使う。基礎トレには出さない
-
-  summary_full: { name: '要約 本番形式', hint: '3段落の英文を要約する', sec: 240, inputSec: 900, full: true, exam: true },
-  essay_full:   { name: '英作文 本番形式', hint: 'TOPIC について意見を書く', sec: 300, inputSec: 1200, full: true, exam: true },
-};
-const TYPES = Object.keys(TYPE_INFO);
+// 種類と分類の正本は 素材/種類.json・素材/分類.json（build.mjs が埋め込む）。新しい種類は 種類.json に1件足す。
+// part は本番の大問（r1/r2/r3/sum/essay/l1/l2/l3）、modes は basic=基礎トレ・mini=ミニテスト・exam=本番、group は基礎トレの見出し、derived は親の種類（読み込み時に作る）
+const REG = {"groups":["英作文の力","要約の力","単語・熟語","読解の力","リスニングの力"],"past":{"exams":{"g2":["2025-3-g2","2026-1-g2","2026-2-g2"],"p1":["2025-3-p1","2026-1-p1","2026-2-p1"]},"g2":{"r1":{"n":51,"field":{"health":3,"daily":25,"work":6,"edu":8,"history":3,"community":3,"science":2,"tech":1},"form":{"word":30,"idiom":21},"ff":{"word":{"health":1,"daily":14,"work":3,"history":2,"edu":6,"community":2,"science":2},"idiom":{"edu":2,"daily":11,"health":2,"work":3,"history":1,"community":1,"tech":1}},"scene":{}},"r2":{"n":18,"field":{"env":6,"science":6,"edu":3,"tech":3},"form":{"content":12,"connector":6},"ff":{"content":{"env":4,"science":4,"edu":2,"tech":2},"connector":{"env":2,"science":2,"edu":1,"tech":1}},"scene":{}},"r3A":{"n":9,"field":{"daily":3,"edu":3,"work":3},"form":{"detail":1,"complete":4,"suggest":1,"why":1,"purpose":2},"ff":{"detail":{"daily":1},"complete":{"daily":1,"edu":1,"work":2},"suggest":{"daily":1},"why":{"edu":1},"purpose":{"edu":1,"work":1}},"scene":{}},"r3B":{"n":15,"field":{"work":5,"history":10},"form":{"complete":7,"why":4,"true":3,"opinion":1},"ff":{"complete":{"work":3,"history":4},"why":{"work":1,"history":3},"true":{"work":1,"history":2},"opinion":{"history":1}},"scene":{}},"sum":{"n":3,"field":{"work":1,"tech":1,"edu":1},"form":{},"ff":{},"scene":{}},"essay":{"n":3,"field":{"edu":2,"tech":1},"form":{},"ff":{},"scene":{}},"l1":{"n":45,"field":{"edu":3,"daily":41,"community":1},"form":{"detail":14,"suggest":9,"why":4,"problem":5,"opinion":2,"inference":3,"next":6,"purpose":2},"ff":{"detail":{"edu":2,"daily":11,"community":1},"suggest":{"daily":9},"why":{"daily":4},"problem":{"daily":5},"opinion":{"daily":1,"edu":1},"inference":{"daily":3},"next":{"daily":6},"purpose":{"daily":2}},"scene":{"school":6,"phone":7,"public":3,"daily_friend":14,"daily_home":4,"shop":10,"work":1}},"l2":{"n":45,"field":{"env":1,"daily":19,"community":6,"science":1,"edu":6,"work":1,"history":9,"health":2},"form":{"detail":29,"why":10,"next":1,"purpose":2,"problem":2,"suggest":1},"ff":{"detail":{"env":1,"daily":12,"science":1,"community":3,"edu":5,"work":1,"history":5,"health":1},"why":{"community":2,"history":3,"edu":1,"daily":4},"next":{"community":1},"purpose":{"daily":1,"history":1},"problem":{"daily":2},"suggest":{"health":1}},"scene":{"science":2,"person":28,"announcement":14,"culture":1}}},"p1":{"r1":{"n":54,"field":{"community":7,"history":6,"daily":14,"edu":7,"health":4,"tech":1,"work":10,"science":2,"env":3},"form":{"word":42,"idiom":12},"ff":{"word":{"community":5,"history":6,"daily":10,"edu":7,"health":3,"tech":1,"work":5,"science":2,"env":3},"idiom":{"daily":4,"work":5,"community":2,"health":1}},"scene":{}},"r2":{"n":18,"field":{"edu":3,"history":3,"science":6,"env":1,"tech":5},"form":{"connector":6,"content":12},"ff":{"connector":{"edu":1,"history":1,"science":2,"env":1,"tech":1},"content":{"edu":2,"history":2,"science":4,"tech":4}},"scene":{}},"r3A":{"n":9,"field":{"science":3,"history":3,"work":3},"form":{"detail":6,"complete":2,"opinion":1},"ff":{"detail":{"science":1,"history":3,"work":2},"complete":{"science":1,"work":1},"opinion":{"science":1}},"scene":{}},"r3B":{"n":12,"field":{"history":7,"science":4,"env":1},"form":{"complete":2,"opinion":4,"inference":3,"why":1,"detail":2},"ff":{"complete":{"history":1,"science":1},"opinion":{"history":2,"science":1,"env":1},"inference":{"history":2,"science":1},"why":{"history":1},"detail":{"science":1,"history":1}},"scene":{}},"sum":{"n":3,"field":{"science":1,"health":2},"form":{},"ff":{},"scene":{}},"essay":{"n":3,"field":{"tech":1,"work":1,"community":1},"form":{},"ff":{},"scene":{}},"l1":{"n":36,"field":{"daily":17,"health":1,"work":12,"edu":5,"community":1},"form":{"detail":7,"suggest":6,"problem":5,"why":6,"inference":5,"opinion":5,"next":2},"ff":{"detail":{"daily":2,"work":4,"edu":1},"suggest":{"health":1,"work":1,"daily":2,"edu":1,"community":1},"problem":{"work":2,"daily":3},"why":{"daily":5,"work":1},"inference":{"work":2,"daily":1,"edu":2},"opinion":{"work":2,"edu":1,"daily":2},"next":{"daily":2}},"scene":{"school":4,"work":14,"public":1,"shop":4,"daily_friend":6,"daily_home":7}},"l2":{"n":36,"field":{"history":16,"science":12,"env":2,"community":2,"tech":3,"health":1},"form":{"detail":23,"opinion":2,"problem":3,"inference":2,"purpose":2,"next":1,"why":2,"suggest":1},"ff":{"detail":{"history":12,"science":9,"env":1,"tech":1},"opinion":{"history":1,"tech":1},"problem":{"community":2,"tech":1},"inference":{"science":1,"history":1},"purpose":{"history":1,"env":1},"next":{"science":1},"why":{"history":1,"science":1},"suggest":{"health":1}},"scene":{"history":7,"science":10,"animal":7,"person":9,"society":3}},"l3":{"n":15,"field":{"daily":9,"work":2,"community":4},"form":{"reallife":15},"ff":{"reallife":{"daily":9,"work":2,"community":4}},"scene":{"冷蔵庫購入":1,"給湯設備修理":1,"人事講演会":1,"登山道選び":1,"空港出発待ち":1,"通学かばん購入":1,"料理教室の会場探し":1,"動物関係の求職":1,"夕食の予約":1,"空港での乗り継ぎ":1,"市街地の駐車":1,"車の支援契約":1,"旅行の宿選び":1,"慈善行事の準備":1,"書店の講演案内":1}}}},"types":{"q_read":{"name":"問いを読む","part":"essay","modes":["basic"],"group":"英作文の力","hint":"何について賛否を言う問題かを選ぶ","sec":25,"choiceOnly":true,"goal":{"grade2":80,"pre1":80}},"template":{"name":"型の穴埋め","part":"essay","modes":["basic"],"group":"英作文の力","hint":"序論・結論の定型文の空所を埋める","sec":25,"cloze":true,"goal":{"grade2":80,"pre1":80}},"reason":{"name":"理由の選択","part":"essay","modes":["basic"],"group":"英作文の力","hint":"立場を支える理由として正しい文を選ぶ","write":"立場を支える理由を英語1文で書く","sec":45,"goal":{"grade2":80,"pre1":80}},"support":{"name":"具体例で支える","part":"essay","modes":["basic"],"group":"英作文の力","hint":"理由を支える説明・具体例として最もよい文を選ぶ","write":"理由を支える説明・具体例を英語1文で書く","sec":35,"goal":{"grade2":80,"pre1":80}},"connector":{"name":"つなぎ語","part":"essay","modes":["basic"],"group":"英作文の力","hint":"文と文をつなぐ語を選ぶ","sec":25,"cloze":true,"goal":{"grade2":80,"pre1":80}},"length_adj":{"name":"語数を調整する","part":"essay","modes":["basic"],"group":"英作文の力","hint":"同じ意味のまま、より短く言い換えた文を選ぶ","write":"同じ意味のまま、より短い英文に書き換える","sec":35,"goal":{"grade2":80,"pre1":80}},"ja2en":{"name":"和文→英文","part":"essay","modes":["basic"],"group":"英作文の力","hint":"日本語に合う自然な英文を選ぶ","write":"日本語を英文にする","sec":40,"goal":{"grade2":80,"pre1":80}},"collocation":{"name":"コロケーション","part":"essay","modes":["basic"],"group":"英作文の力","hint":"自然に組み合わさる語を選ぶ","sec":25,"cloze":true,"goal":{"grade2":80,"pre1":80}},"error":{"name":"誤りのない文","part":"essay","modes":["basic"],"group":"英作文の力","hint":"時制・数・冠詞・スペル・語法に誤りのない文を選ぶ","write":"日本語に合う、誤りのない英文を書く","sec":45,"goal":{"grade2":80,"pre1":80}},"essay_step":{"name":"英作文を1文ずつ","part":"essay","modes":["basic"],"group":"英作文の力","hint":"英作文のこの段階に入る最もよい1文を選ぶ","sec":40,"choiceOnly":true,"derived":"essay_full"},"para_role":{"name":"段落の役割","part":"sum","modes":["basic"],"group":"要約の力","hint":"この段落の役割を選ぶ（段落のほとんどが1つの事例や数値なら『具体例・データ』、それ以外は主張の中身で決める）","sec":25,"choiceOnly":true,"goal":{"grade2":80,"pre1":80}},"summary":{"name":"要約の選択","part":"sum","modes":["basic"],"group":"要約の力","hint":"段落を1文にまとめた最もよい要約を選ぶ","write":"段落の要点を英語1文で書く","sec":60,"goal":{"grade2":80,"pre1":80}},"generalize":{"name":"一般化する","part":"sum","modes":["basic"],"group":"要約の力","hint":"色の付いた具体的な部分を、要約で使う一般的な言い方にする","sec":25,"cloze":true,"goal":{"grade2":80,"pre1":80}},"paraphrase":{"name":"言い換え","part":"sum","modes":["basic"],"group":"要約の力","hint":"同じ意味のまま、構文ごと言い換えた文を選ぶ（1語を同義語に替えただけの文は不可）","write":"同じ意味で、構文ごと言い換えた英文を書く","sec":45,"goal":{"grade2":80,"pre1":80}},"sum_step":{"name":"要約を1段落ずつ","part":"sum","modes":["basic"],"group":"要約の力","hint":"この段落を1文に要約した最もよいものを選ぶ","sec":40,"choiceOnly":true,"derived":"summary_full"},"daimon1":{"name":"大問1 語彙","part":"r1","modes":["basic","mini","exam"],"group":"単語・熟語","hint":"文脈に合う語句を選ぶ（本番の大問1と同じ形）","sec":25,"cloze":true,"vocab":true,"goal":{"grade2":200,"pre1":200}},"vocab_je":{"name":"単語・熟語 和→英","part":"r1","modes":["basic"],"group":"単語・熟語","hint":"（ ）の日本語に合う英語の語句を入れる","sec":20,"cloze":true,"vocab":true,"goal":{"grade2":750,"pre1":1000}},"vocab_ej":{"name":"単語・熟語 英→和","part":"r1","modes":["basic"],"group":"単語・熟語","hint":"色の付いた語句の、この文での意味を答える","sec":20,"cloze":true,"vocab":true,"ja":true,"goal":{"grade2":750,"pre1":1000}},"r2_step":{"name":"長文の空所を1つずつ","part":"r2","modes":["basic"],"group":"読解の力","hint":"段落の空所に入る語句を、前後の文脈から選ぶ（本番の大問2の空所1つ分）","sec":40,"choiceOnly":true,"derived":"reading2"},"r3_step":{"name":"長文の設問を1つずつ","part":"r3","modes":["basic"],"group":"読解の力","hint":"段落を読んで、設問に最もよい選択肢を選ぶ（本番の大問3の設問1つ分）","sec":60,"choiceOnly":true,"derived":"reading3"},"l1_step":{"name":"会話を1問ずつ聞く","part":"l1","modes":["basic"],"group":"リスニングの力","hint":"会話と質問を聞いて、最もよい答えを選ぶ（本番の第1部と同じ形）","sec":40,"choiceOnly":true,"derived":"listen1"},"l2_step":{"name":"文章を1問ずつ聞く","part":"l2","modes":["basic"],"group":"リスニングの力","hint":"文章と質問を聞いて、最もよい答えを選ぶ（本番の第2部の設問1つ分）","sec":45,"choiceOnly":true,"derived":"listen2"},"l3_step":{"name":"Real-Life を1問ずつ","part":"l3","modes":["basic"],"group":"リスニングの力","hint":"状況と質問を読み、10秒後の放送を聞いて最もよい行動を選ぶ（本番の第3部と同じ形）","sec":50,"choiceOnly":true,"grades":["pre1"],"derived":"listen3"},"essay_full":{"name":"英作文 本番形式","part":"essay","modes":["mini","exam"],"group":"英作文の力","hint":"TOPIC について意見を書く","sec":300,"inputSec":1200,"full":true,"goal":{"grade2":40,"pre1":40}},"summary_full":{"name":"要約 本番形式","part":"sum","modes":["mini","exam"],"group":"要約の力","hint":"3段落の英文を要約する","sec":240,"inputSec":900,"full":true,"goal":{"grade2":40,"pre1":40}},"reading2":{"name":"大問2 長文の空所","part":"r2","modes":["mini","exam"],"group":"読解の力","goal":{"grade2":20,"pre1":20}},"reading3":{"name":"大問3 内容一致","part":"r3","modes":["mini","exam"],"group":"読解の力","goal":{"grade2":20,"pre1":20}},"listen1":{"name":"L 第1部 会話","part":"l1","modes":["mini","exam"],"group":"リスニングの力","goal":{"grade2":150,"pre1":120}},"listen2":{"name":"L 第2部 文章","part":"l2","modes":["mini","exam"],"group":"リスニングの力","goal":{"grade2":150,"pre1":60}},"listen3":{"name":"L 第3部 Real-Life","part":"l3","modes":["mini","exam"],"group":"リスニングの力","goal":{"grade2":0,"pre1":50},"grades":["pre1"]}},"fields":[{"id":"tech","name":"テクノロジーと社会"},{"id":"edu","name":"教育・学び"},{"id":"env","name":"環境・エネルギー・自然保護"},{"id":"health","name":"健康・医療"},{"id":"work","name":"働き方・経済・政策"},{"id":"community","name":"地域・交通・福祉・安全"},{"id":"science","name":"自然科学・学術（生物・宇宙・心理など）"},{"id":"history","name":"歴史・人物・発明・文化・芸術"},{"id":"daily","name":"日常のやりとり（買い物・予定・家族・友人・職場や学校の用事）"}],"parts":{"r1":{"name":"大問1 語彙","count":{"g2":17,"p1":18},"g2":{"past":51,"field":{"daily":0.433,"edu":0.15,"work":0.117,"health":0.067,"community":0.067,"history":0.067,"science":0.05,"tech":0.033,"env":0.017},"level":{"1":0.333,"2":0.517,"3":0.15},"form":{"word":0.575,"idiom":0.425},"pos":{"熟語":21,"名詞":12,"動詞":12,"形容詞":3,"副詞":3}},"p1":{"past":54,"field":{"daily":0.237,"work":0.174,"edu":0.127,"community":0.127,"history":0.111,"health":0.08,"env":0.064,"science":0.048,"tech":0.032},"level":{"1":0.176,"2":0.664,"3":0.16},"form":{"word":0.736,"idiom":0.264},"pos":{"名詞":18,"動詞":13,"熟語":12,"形容詞":11}}},"r2":{"name":"大問2 長文の空所","count":{"g2":6,"p1":6},"g2":{"past":18,"field":{"env":0.302,"science":0.302,"tech":0.16,"edu":0.16,"health":0.019,"work":0.019,"community":0.019,"history":0.019},"level":{"1":0.333,"2":0.522,"3":0.144},"form":{"content":0.642,"connector":0.358}},"p1":{"past":18,"field":{"science":0.302,"tech":0.255,"edu":0.16,"history":0.16,"env":0.066,"health":0.019,"work":0.019,"community":0.019},"level":{"1":0.475,"2":0.475,"3":0.05},"form":{"content":0.642,"connector":0.358}}},"r3A":{"name":"大問3 A","count":{"g2":3,"p1":3},"g2":{"past":9,"field":{"edu":0.211,"work":0.211,"daily":0.211,"tech":0.061,"env":0.061,"health":0.061,"community":0.061,"science":0.061,"history":0.061},"level":{"1":0.383,"2":0.433,"3":0.183},"form":{"complete":0.279,"purpose":0.179,"why":0.129,"detail":0.129,"suggest":0.129,"inference":0.079,"opinion":0.079}},"p1":{"past":9,"field":{"work":0.211,"science":0.211,"history":0.211,"tech":0.061,"edu":0.061,"env":0.061,"health":0.061,"community":0.061,"daily":0.061},"level":{"1":0.183,"2":0.583,"3":0.233},"form":{"detail":0.379,"complete":0.179,"opinion":0.129,"why":0.079,"purpose":0.079,"suggest":0.079,"inference":0.079}}},"r3B":{"name":"大問3 B","count":{"g2":5,"p1":4},"g2":{"past":15,"field":{"history":0.531,"work":0.281,"tech":0.031,"edu":0.031,"env":0.031,"health":0.031,"community":0.031,"science":0.031},"level":{"1":0.333,"2":0.583,"3":0.083},"form":{"complete":0.386,"why":0.236,"true":0.186,"opinion":0.086,"purpose":0.036,"detail":0.036,"inference":0.036}},"p1":{"past":12,"field":{"history":0.4,"science":0.25,"env":0.1,"tech":0.05,"edu":0.05,"health":0.05,"work":0.05,"community":0.05},"level":{"1":0.133,"2":0.633,"3":0.233},"form":{"opinion":0.257,"inference":0.207,"detail":0.157,"complete":0.157,"why":0.107,"purpose":0.057,"true":0.057}}},"sum":{"name":"要約","count":{"g2":1,"p1":1},"g2":{"past":3,"field":{"tech":0.171,"edu":0.171,"work":0.171,"env":0.121,"health":0.121,"community":0.121,"science":0.121},"level":{"1":0.283,"2":0.433,"3":0.283}},"p1":{"past":3,"field":{"health":0.221,"science":0.171,"tech":0.121,"edu":0.121,"env":0.121,"work":0.121,"community":0.121},"level":{"1":0.283,"2":0.433,"3":0.283}}},"essay":{"name":"英作文","count":{"g2":1,"p1":1},"g2":{"past":3,"field":{"edu":0.242,"tech":0.192,"env":0.142,"health":0.142,"work":0.142,"community":0.142},"level":{"1":0.283,"2":0.433,"3":0.283}},"p1":{"past":3,"field":{"tech":0.192,"work":0.192,"community":0.192,"edu":0.142,"env":0.142,"health":0.142},"level":{"1":0.283,"2":0.433,"3":0.283}}},"l1":{"name":"リスニング 第1部","count":{"g2":15,"p1":12},"g2":{"past":45,"field":{"daily":0.791,"edu":0.073,"community":0.036,"tech":0.017,"env":0.017,"health":0.017,"work":0.017,"science":0.017,"history":0.017},"level":{"1":0.126,"2":0.824,"3":0.05},"form":{"detail":0.283,"suggest":0.189,"next":0.132,"problem":0.113,"why":0.094,"inference":0.075,"opinion":0.057,"purpose":0.057},"scene":{"daily_friend":0.286,"shop":0.21,"phone":0.154,"school":0.135,"daily_home":0.097,"public":0.078,"work":0.04}},"p1":{"past":36,"field":{"daily":0.418,"work":0.3,"edu":0.135,"health":0.04,"community":0.04,"tech":0.017,"env":0.017,"science":0.017,"history":0.017},"level":{"1":0.097,"2":0.853,"3":0.05},"form":{"detail":0.184,"suggest":0.16,"why":0.16,"problem":0.137,"inference":0.137,"opinion":0.137,"next":0.066,"purpose":0.019},"scene":{"work":0.352,"daily_home":0.187,"daily_friend":0.163,"shop":0.116,"school":0.116,"public":0.045,"phone":0.021}}},"l2":{"name":"リスニング 第2部","count":{"g2":15,"p1":12},"g2":{"past":45,"field":{"daily":0.376,"history":0.187,"edu":0.13,"community":0.13,"health":0.054,"env":0.036,"work":0.036,"science":0.036,"tech":0.017},"level":{"1":0.144,"2":0.787,"3":0.069},"form":{"detail":0.567,"why":0.208,"purpose":0.057,"problem":0.057,"next":0.038,"suggest":0.038,"inference":0.019,"opinion":0.019},"scene":{"person":0.55,"announcement":0.286,"science":0.059,"culture":0.04,"animal":0.021,"history":0.021,"society":0.021}},"p1":{"past":36,"field":{"history":0.394,"science":0.3,"tech":0.087,"env":0.064,"community":0.064,"health":0.04,"edu":0.017,"work":0.017,"daily":0.017},"level":{"1":0.05,"2":0.782,"3":0.168},"form":{"detail":0.562,"problem":0.09,"why":0.066,"purpose":0.066,"inference":0.066,"opinion":0.066,"next":0.042,"suggest":0.042},"scene":{"science":0.258,"person":0.234,"animal":0.187,"history":0.187,"society":0.092,"culture":0.021,"announcement":0.021}}},"l3":{"name":"リスニング 第3部","count":{"p1":5},"p1":{"past":15,"field":{"daily":0.478,"community":0.228,"work":0.128,"tech":0.028,"edu":0.028,"env":0.028,"health":0.028,"science":0.028,"history":0.028},"level":{"1":0.083,"2":0.833,"3":0.083},"form":{"reallife":1}}}}};
+// sec は選択式の目標時間（秒）。exam は基礎トレに出ない種類（本番形式の通し・模試の長文とリスニング）
+const TYPE_INFO = Object.fromEntries(Object.entries(REG.types).map(([k, t]) => [k, { ...t, exam: !t.modes.includes('basic') }]));
+const TYPES = Object.keys(TYPE_INFO).filter((t) => TYPE_INFO[t].modes.includes('basic') || TYPE_INFO[t].full);
 const WRITE_TYPES = TYPES.filter((t) => !TYPE_INFO[t].vocab && !TYPE_INFO[t].exam);
-const EXAM_TYPES = ['essay_full', 'summary_full'];
-const BASIC_TYPES = TYPES.filter((t) => !TYPE_INFO[t].exam);
-// 基礎トレの並び: 本番の段階の順（問いを読む → 序論 → 理由 → 具体例 → つなぎ → 語数／段落の役割 → 要点 → 一般化 → 言い換え）
-const ESSAY_DRILLS = ['q_read', 'template', 'reason', 'support', 'connector', 'length_adj', 'ja2en', 'collocation', 'error', 'essay_step'];
-const SUMMARY_DRILLS = ['para_role', 'summary', 'generalize', 'paraphrase', 'sum_step'];
+const EXAM_TYPES = TYPES.filter((t) => TYPE_INFO[t].full);
+// 基礎トレに出す種類（タイル）。長文・リスニングの1問ずつ（STEP_PARTS）は、おまかせ・運転中・復習の選び方には入れない
+const STEP_PARTS = ['r2', 'r3', 'l1', 'l2', 'l3'];
+const TILE_TYPES = TYPES.filter((t) => TYPE_INFO[t].modes.includes('basic'));
+const BASIC_TYPES = TILE_TYPES.filter((t) => !STEP_PARTS.includes(TYPE_INFO[t].part));
 const VOCAB_TYPES = TYPES.filter((t) => TYPE_INFO[t].vocab);
-// essay_full・summary_full の steps を、基礎トレの1問ずつ（essay_step・sum_step）にする。データは変えず、読み込み時に作る。
+const GRADE_DIR = { '2': 'grade2', p1: 'pre1' };
+const gradeOk = (t, g) => !TYPE_INFO[t].grades || TYPE_INFO[t].grades.includes(GRADE_DIR[g]);
+// 基礎トレの見出しの補足（見出しの名前と順は 種類.json の groups）
+const GROUP_NOTE = { '英作文の力': '英作文を1文ずつ組み立てる', '要約の力': '段落を1文にまとめる', '単語・熟語': '文の中で覚える・大問1を含む', '読解の力': '段落ごとに空所・設問を解く', 'リスニングの力': '1問ずつ聞いて答える' };
+// 派生の種類（種類.json の derived）は、親の種類の問題から読み込み時に作る（データは持たない）。親の種類名 → 作り方の表
 // set の付いた予測模試の問題は、模試のために取っておくので使わない
 const STEP_ROLE = { intro: '序論（立場）', reason1: '理由1', example1: '理由1の説明・具体例', reason2: '理由2', example2: '理由2の説明・具体例', conclusion: '結論', p1: '第1段落', p2: '第2段落', p3: '第3段落' };
 const STEP_POINT = {
@@ -389,27 +410,63 @@ const STEP_POINT = {
   p2: '段落の要点だけを、自分の言葉で1文にする。例や数字は入れず、本文にないことも足さない。',
   p3: '段落の要点だけを、自分の言葉で1文にする。つなぎ語（However など）で段落の流れを示してよい。',
 };
-function addSteps(d) {
-  const sel = (st) => [{ t: st.t, why: st.why }, ...st.wrong.map((w) => ({ t: w.t, why: w.why }))]; // 正解が先頭（基礎トレの画面が混ぜる）
-  d.essay_step = (d.essay_full || []).filter((it) => !it.set && Array.isArray(it.steps)).flatMap((it) => it.steps.map((st, k) => {
+const stepSel = (st) => [{ t: st.t, why: st.why }, ...st.wrong.map((w) => ({ t: w.t, why: w.why }))]; // 正解が先頭（基礎トレの画面が混ぜる）
+const speakerOf = (id) => ([...id].reduce((a, c) => a + c.charCodeAt(0), 0) % 2 ? 'M' : 'W'); // 文章の話者（模試は放送ごとに交互。ここは問題ごとに固定）
+const DERIVE = {
+  // 英作文の通し → 1文ずつ（essay_step）
+  essay_full: (src) => src.filter((it) => Array.isArray(it.steps)).flatMap((it) => it.steps.map((st, k) => {
     const stance = it.stance === 'agree' ? 'Agree' : 'Disagree';
     const so = it.steps.slice(0, k).map((x) => x.t).join(' ');
-    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, q_ja: it.q_ja, answer: 0, choices: sel(st),
+    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, q_ja: it.q_ja, answer: 0, choices: stepSel(st),
       q: `${it.situation ? it.situation + ' ' : ''}${it.question}
 Position: ${stance}
 POINTS: ${(it.use_points || []).join(', ')}${so ? `
 So far: ${so}` : ''}
 【${STEP_ROLE[st.role] || st.role}】に入る1文を選ぶ`,
       point: STEP_POINT[st.role] || it.point, drive: { ja: `${stance === 'Agree' ? '賛成' : '反対'}の立場で、${STEP_ROLE[st.role] || st.role}を英語で言ってください。`, en: st.t } };
-  }));
-  d.sum_step = (d.summary_full || []).filter((it) => !it.set && Array.isArray(it.steps) && Array.isArray(it.passage)).flatMap((it) => it.steps.map((st, k) => {
+  })),
+  // 要約の通し → 1段落ずつ（sum_step）
+  summary_full: (src) => src.filter((it) => Array.isArray(it.steps) && Array.isArray(it.passage)).flatMap((it) => it.steps.map((st, k) => {
     const pi = ['p1', 'p2', 'p3'].indexOf(st.role);
     if (pi < 0 || !it.passage[pi]) return null;
-    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, q_ja: "", answer: 0, choices: sel(st),
+    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, q_ja: "", answer: 0, choices: stepSel(st),
       q: `${it.passage[pi]}
 【${STEP_ROLE[st.role]}】を1文に要約したものを選ぶ`,
       point: STEP_POINT[st.role], drive: { ja: `${STEP_ROLE[st.role]}の要点を、英語で言ってください。`, en: st.t } };
-  })).filter(Boolean);
+  })).filter(Boolean),
+  // 大問2 → 空所1つ＝1問（r2_step）。表示は空所のある段落（ほかの空所は答えを入れて見せる）
+  reading2: (src) => src.filter((it) => Array.isArray(it.blanks) && Array.isArray(it.passage)).flatMap((it) => it.blanks.map((b, k) => {
+    const pi = it.passage.findIndex((p) => p.includes(`(${k + 1})`));
+    if (pi < 0) return null;
+    const fill = (target) => it.passage[pi].replace(/\((\d)\)/g, (m, n) => { const x = it.blanks[n - 1]; return +n === k + 1 && target ? '___' : x ? x.choices[x.answer].t : m; });
+    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, kind: b.kind, q: fill(true), q_ja: it.q_ja, answer: b.answer, choices: b.choices,
+      point: it.point, exHead: '空所を埋めた段落', drive: { ja: it.q_ja, en: fill(false) } };
+  })).filter(Boolean),
+  // 大問3 → 設問1つ＝1問（r3_step）。表示は q.para の段落と設問
+  reading3: (src) => src.filter((it) => Array.isArray(it.questions) && Array.isArray(it.passage)).flatMap((it) => it.questions.map((q, k) => {
+    if (!it.passage[q.para]) return null;
+    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, part: it.part, q: `${it.passage[q.para]}
+
+${q.q}`, q_ja: it.q_ja, answer: q.answer, choices: q.choices,
+      point: it.point, exHead: '本文の段落', drive: { ja: it.q_ja, en: it.passage[q.para] } };
+  })).filter(Boolean),
+  // 第1部 → 会話と質問を放送してから4択（l1_step）。say は [英文, 話者] の並び（sayMock で読む）
+  listen1: (src) => src.filter((it) => Array.isArray(it.lines)).map((it) => ({ id: `${it.id}#0`, level: it.level, topic: it.topic, scene: it.scene, q: it.question, q_ja: it.q_ja, answer: it.answer, choices: it.choices,
+    point: it.point, exHead: '台本', say: [...it.lines.map((l) => [l.t, l.sp]), [`Question: ${it.question}`, 'N']],
+    drive: { ja: it.q_ja, en: `${it.lines.map((l) => l.t).join(' ')} ${it.question}` } })),
+  // 第2部 → 設問1つ＝1問。同じ文章の設問は、文章ごと読み上げる（l2_step）
+  listen2: (src) => src.filter((it) => Array.isArray(it.questions)).flatMap((it) => it.questions.map((q, k) => ({ id: `${it.id}#${k}`, level: it.level, topic: it.topic, scene: it.scene, q: q.q, q_ja: it.q_ja, answer: q.answer, choices: q.choices,
+    point: it.point, exHead: '台本', say: [[it.script, speakerOf(it.id)], [`Question: ${q.q}`, 'N']], drive: { ja: it.q_ja, en: `${it.script} ${q.q}` } }))),
+  // 第3部 Real-Life → 状況と質問を表示し、10秒後に放送して4択（l3_step）
+  listen3: (src) => src.filter((it) => it.script && it.situation).map((it) => ({ id: `${it.id}#0`, level: it.level, topic: it.topic, situation: it.situation, q: it.question, q_ja: it.q_ja, answer: it.answer, choices: it.choices,
+    point: it.point, exHead: '台本', lead: 10, say: [[it.script, 'N']], drive: { ja: it.q_ja, en: it.script } })),
+};
+function addDerived(d) {
+  for (const [t, info] of Object.entries(TYPE_INFO)) {
+    if (!info.derived) continue;
+    if (!DERIVE[info.derived]) throw new Error(`種類 ${t} の derived "${info.derived}" の作り方がない`);
+    d[t] = DERIVE[info.derived]((d[info.derived] || []).filter((it) => !it.set));
+  }
 }
 const LEVELS = { '1': 'Lv1 基礎', '2': 'Lv2 標準', '3': 'Lv3 発展', 'r': 'ランダム' };
 const MODES = { choice: '選択式', input: '入力式' };
@@ -646,9 +703,11 @@ const TYPE_LOOK = {
   ja2en: ['#e06a14', 'spark'], template: ['#141a46', 'words'], connector: ['#0b84c6', 'link'], collocation: ['#b7791f', 'bolt'],
   vocab_je: ['#e0457b', 'words'], vocab_ej: ['#10a37f', 'words'],
   q_read: ['#334155', 'target'], support: ['#2563eb', 'spark'], para_role: ['#0f766e', 'book'], generalize: ['#9333ea', 'repeat'], length_adj: ['#ea580c', 'pen'],
+  r2_step: ['#0f766e', 'book'], r3_step: ['#1d4ed8', 'book'], l1_step: ['#c2410c', 'speaker'], l2_step: ['#9d174d', 'speaker'], l3_step: ['#4d7c0f', 'speaker'],
   essay_step: ['#be123c', 'pen'], sum_step: ['#0e7490', 'book'], daimon1: ['#6d28d9', 'words'], summary_full: ['#0e7490', 'book'], essay_full: ['#be123c', 'pen'],
 };
-const tIcon = (t) => `<span class="ti" style="background:linear-gradient(135deg, ${TYPE_LOOK[t][0]}, ${TYPE_LOOK[t][0]}cc)">${icon(TYPE_LOOK[t][1])}</span>`;
+const lookOf = (t) => TYPE_LOOK[t] || ['#475569', 'bolt']; // 種類.json に足しただけの種類の色とアイコン
+const tIcon = (t) => `<span class="ti" style="background:linear-gradient(135deg, ${lookOf(t)[0]}, ${lookOf(t)[0]}cc)">${icon(lookOf(t)[1])}</span>`;
 
 // 設定はタブではなく、ヘッダー右の歯車（2026-11-14）
 const TABS = [['home', 'home', 'ホーム'], ['problems', 'bolt', '基礎トレ'], ['mini', 'target', 'ミニテスト'], ['exam', 'pen', '本番'], ['stats', 'chart', '成績']];
@@ -664,7 +723,7 @@ function chrome() {
 }
 function show(t) {
   if (!DATA[store.grade]) { tab = t; return withGrade(() => show(tab)); } // 級のデータを読み込み中
-  stopDrive();
+  stopDrive(); stopListen();
   clearInterval(mockTick); mockTok++; if (hasTTS && store.mock && store.mock.phase === 'l') speechSynthesis.cancel(); // 模擬試験の時計と放送を止める
   if (session) clearInterval(session.tick);
   document.body.classList.remove('quiz');
@@ -721,9 +780,171 @@ function modeTip(key) {
   }[key];
   if (!store.seenTips[key]) { tipsOpen.add(key); store.seenTips[key] = 1; save(); }
   return `<details class="card modetip" data-tip="${key}" ${tipsOpen.has(key) ? 'open' : ''}><summary>${icon('bulb')}${T[0]}</summary><p class="tiplead">${h(T[1])}</p>`
-    + T[2].map(([hd, xs]) => `<h4>${h(hd)}</h4><ul>${xs.map((x) => `<li>${h(x)}</li>`).join('')}</ul>`).join('') + (T[3] || '') + '</details>';
+    + T[2].map(([hd, xs]) => `<h4>${h(hd)}</h4><ul>${xs.map((x) => `<li>${h(x)}</li>`).join('')}</ul>`).join('') + (T[3] || '')
+    + `<details class="tipsub" data-sub="${key}"><summary>${SUB_TITLE[key](g)}</summary><div class="subbody"></div></details></details>`;
 }
-function bindTips() { app.querySelectorAll('details.modetip').forEach((d) => d.ontoggle = () => { if (d.open) tipsOpen.add(d.dataset.tip); else tipsOpen.delete(d.dataset.tip); }); }
+function bindTips() {
+  app.querySelectorAll('details.modetip').forEach((d) => d.ontoggle = () => { if (d.open) tipsOpen.add(d.dataset.tip); else tipsOpen.delete(d.dataset.tip); });
+  // 表は開いたときに初めて計算して描く
+  app.querySelectorAll('details.tipsub').forEach((d) => d.ontoggle = () => { if (d.open && !d.dataset.done) { d.dataset.done = 1; renderSub(d.dataset.sub, d.querySelector('.subbody')); } });
+}
+// ---------- コツの中の表（過去問の傾向・練習できる範囲・問題の範囲。開いたときに初めて計算して描く） ----------
+// 過去問の数は build.mjs が REG.past に埋め込む（級 → 大問 → {n, field, form, ff, scene}）。このアプリの数は DATA から数える（set 付きの予測模試は除く）
+const FG = [ // 帯の色は5つ（日常・歴史と科学・教育・社会・その他）
+  { id: 'daily', name: '日常', ids: ['daily'], col: '#ff7a45' },
+  { id: 'hs', name: '歴史と科学', ids: ['history', 'science'], col: '#1fa595' },
+  { id: 'edu', name: '教育', ids: ['edu'], col: '#3b4fd8' },
+  { id: 'soc', name: '社会', ids: ['tech', 'env', 'health', 'work', 'community'], col: '#8a5cd6' },
+  { id: 'oth', name: 'その他', ids: [], col: '#aab0c0' },
+];
+const MINI_COLS = [0, 2, 1, 3]; // ミニテストの列順（日常・教育・歴史と科学・社会。9分野はこの4つのどれかに入るので「その他」の列は出さない）
+const fgOf = (f) => FG.find((x) => x.ids.includes(f)) || FG[4];
+const FIELD_SHORT = { tech: 'テクノロジー', edu: '教育・学び', env: '環境', health: '健康・医療', work: '働き方・経済', community: '地域・福祉', science: '自然科学', history: '歴史・文化', daily: '日常' };
+const fieldName = (id) => FIELD_SHORT[id] || (REG.fields.find((f) => f.id === id) || {}).name || id;
+const FORM_NAME = { word: '単語', idiom: '熟語', grammar: '文法', content: '内容の句', connector: 'つなぎ語', why: '理由', purpose: '目的', detail: '詳細', problem: '問題点', next: '次の行動', suggest: '提案・依頼', inference: '推論', opinion: '考え', complete: '文完成', true: '全体で正しい', reallife: '状況に合う行動' };
+const FORM_ORDER = Object.keys(FORM_NAME);
+const FORM_PAL = ['#3b4fd8', '#ff7a45', '#12855a', '#d6409f', '#f5b83d', '#2aa7c9', '#8a5cd6', '#7a8499']; // 8色。同じ大問に出る形どうしが重ならないように割り当てる
+const FORM_COL = { detail: 0, suggest: 1, why: 2, opinion: 3, inference: 4, purpose: 5, complete: 6, problem: 6, true: 7, next: 7, word: 0, idiom: 1, grammar: 2, content: 3, connector: 4, reallife: 0 };
+const formCol = (f) => FORM_PAL[FORM_COL[f] ?? 7];
+const SCENE_NAME = { daily_friend: '友人・日常', shop: '買い物', phone: '電話', school: '学校', daily_home: '家庭', public: '公共の場', work: '職場' };
+const PART_ROWS = [['r1', '大問1', ['r1']], ['r2', '大問2', ['r2']], ['r3A', '大問3 A', ['r3A']], ['r3B', '大問3 B', ['r3B']], ['sw', '要約・英作文', ['sum', 'essay']], ['l1', 'L 第1部', ['l1']], ['l2', 'L 第2部', ['l2']], ['l3', 'L 第3部', ['l3']]];
+const PART_NAME = { r1: '大問1', r2: '大問2', r3: '大問3', sum: '要約', essay: '英作文', l1: 'L 第1部', l2: 'L 第2部', l3: 'L 第3部' };
+// 大問ごとの解き方のコツ1行（参照/勉強法とコツ_2026-11-14.md と、上の modeTip の文から）
+const PART_TIP = {
+  r1: '1問30秒。空所の前後の語と結びつく語を探す。知らない語は、分かる選択肢を消して残りから選ぶ。',
+  r2: '空所の前後の文の関係（対比・理由・結果・例）を言葉にしてから、つなぎ語や内容を選ぶ。',
+  r3A: '設問を先に読んで探すものを決めてから本文へ。設問はほぼ段落の順。答えらしい所も、その段落の最後まで読む。',
+  r3B: '長文は設問を先に読む。迷ったら主語・時点・程度・因果のずれを見る（正解はたいてい言い換え）。時間がなければ最後の設問から捨てる。',
+  sw: '要約は段落の役割を決めて1段落1文（具体例と数字は捨てる）。英作文は書く前の2〜3分で立場と理由2つを決め、最後の2分で三単現の s・時制・冠詞を見直す。',
+  l1: '放送の前に選択肢の共通点と違いを見て、何が問われるか予想する。会話は後半の発言に答えが集まりやすい。',
+  l2: '文章は冒頭と but / however のあとをよく聞く。放送と同じ語が入った選択肢は、ひっかけのことがある。',
+  l3: '放送前の10秒で状況と質問を読み、条件（予算・時間・人数など）に印をつける。',
+};
+const tipSel = { exam: 'field', mini: 'R', rows: new Set() };
+const gk = (g) => (g === '2' ? 'g2' : 'p1'); // 級の鍵（アプリ内は '2'・'p1'、REG は g2・p1）
+const pastOf = (g) => (REG.past || {})[gk(g)] || {};
+const pastExams = (g) => (((REG.past || {}).exams || {})[gk(g)] || []).length;
+function sumPast(g, parts) {
+  const o = { n: 0, field: {}, form: {}, ff: {}, scene: {} };
+  for (const p of parts) {
+    const P = pastOf(g)[p]; if (!P) continue;
+    o.n += P.n;
+    for (const k of ['field', 'form', 'scene']) for (const [a, v] of Object.entries(P[k])) o[k][a] = (o[k][a] || 0) + v;
+    for (const [f, m] of Object.entries(P.ff)) for (const [a, v] of Object.entries(m)) ((o.ff[f] ||= {})[a] = (o.ff[f][a] || 0) + v);
+  }
+  return o;
+}
+// このアプリの問題数（大問 → {n, field, form, ff}）。r2 は空所ごと、r3・L第2部は設問ごと、ほかは1問ごと
+function appCounts(g) {
+  const D = DATA[g] || {}, out = {};
+  const add = (part, field, form) => {
+    const P = (out[part] ||= { n: 0, field: {}, form: {}, ff: {} });
+    P.n++; P.field[field] = (P.field[field] || 0) + 1;
+    if (form) { P.form[form] = (P.form[form] || 0) + 1; ((P.ff[form] ||= {})[field] = (P.ff[form][field] || 0) + 1); }
+  };
+  const live = (t) => (D[t] || []).filter((it) => !it.set);
+  live('daimon1').forEach((it) => add('r1', it.topic, it.kind));
+  live('reading2').forEach((it) => (it.blanks || []).forEach((b) => add('r2', it.topic, b.kind)));
+  live('reading3').forEach((it) => (it.questions || []).forEach((q) => add(it.part === 'B' ? 'r3B' : 'r3A', it.topic, q.form)));
+  live('listen1').forEach((it) => add('l1', it.topic, it.form));
+  live('listen2').forEach((it) => (it.questions || []).forEach((q) => add('l2', it.topic, q.form)));
+  live('listen3').forEach((it) => add('l3', it.topic, it.form));
+  live('essay_full').forEach((it) => add('essay', it.topic));
+  live('summary_full').forEach((it) => add('sum', it.topic));
+  return out;
+}
+const bandHtml = (segs) => `<span class="band">${segs.filter((s) => s.n > 0).map((s) => `<i style="flex:${s.n};background:${s.col}" title="${h(s.t)} ${s.n}"></i>`).join('')}</span>`;
+const fieldSegs = (fc) => FG.map((x) => ({ n: Object.entries(fc).filter(([f]) => fgOf(f) === x).reduce((a, [, v]) => a + v, 0), col: x.col, t: x.name }));
+const formSegs = (fm) => FORM_ORDER.filter((f) => fm[f]).map((f) => ({ n: fm[f], col: formCol(f), t: FORM_NAME[f] }));
+const pctOf = (v, n) => `${Math.round((v / n) * 100)}%`;
+const lgHtml = (items) => `<div class="tlg">${items.map(([col, t]) => `<span><i style="background:${col}"></i>${h(t)}</span>`).join('')}</div>`;
+const swHtml = (key, opts) => `<div class="tsw">${opts.map(([v, t]) => `<button data-sw="${v}" class="${tipSel[key] === v ? 'on' : ''}">${t}</button>`).join('')}</div>`;
+const pills = (entries, n, colOf) => entries.sort((a, b) => b[1] - a[1]).map(([k, v, name]) => `<span class="pill"><i style="background:${colOf(k)}"></i>${h(name)} ${pctOf(v, n)}</span>`).join('');
+
+function examTable(g) {
+  const view = tipSel.exam;
+  const rows = PART_ROWS.map(([id, name, parts]) => ({ id, name, P: sumPast(g, parts) })).filter((r) => r.P.n);
+  const usedForms = new Set();
+  const body = rows.map(({ id, name, P }) => {
+    const hasForm = Object.keys(P.form).length > 0;
+    Object.keys(P.form).forEach((f) => usedForms.add(f));
+    const segs = view === 'field' ? fieldSegs(P.field) : hasForm ? formSegs(P.form) : [{ n: P.n, col: '#c9cdd8', t: '問いの形なし' }];
+    const det = view === 'field'
+      ? pills(Object.entries(P.field).map(([k, v]) => [k, v, fieldName(k)]), P.n, (k) => fgOf(k).col)
+      : hasForm ? pills(Object.entries(P.form).map(([k, v]) => [k, v, FORM_NAME[k] || k]), P.n, formCol) : '<span class="muted">要約・英作文は問いの形を集計していません（灰色の帯）</span>';
+    const scenes = Object.keys(P.scene).length ? `<p class="ptip">場面の上位: ${Object.entries(P.scene).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${h(SCENE_NAME[k] || k)} ${pctOf(v, P.n)}`).join('・')}</p>` : '';
+    const open = tipSel.rows.has(id);
+    return `<div class="prw"><button class="prow" data-row="${id}" aria-expanded="${open}"><span class="pn">${name}</span><span class="pc">${P.n}問</span>${bandHtml(segs)}</button>
+      <div class="pdet" ${open ? '' : 'hidden'}><div class="pills">${det}</div>${scenes}<p class="ptip">${h(PART_TIP[id] || '')}</p></div></div>`;
+  }).join('');
+  const lg = view === 'field' ? lgHtml(FG.map((x) => [x.col, x.name])) : (() => {
+    const byCol = {};
+    FORM_ORDER.filter((f) => usedForms.has(f)).forEach((f) => (byCol[formCol(f)] ||= []).push(FORM_NAME[f]));
+    return lgHtml(Object.entries(byCol).map(([c, ns]) => [c, ns.join('・')]));
+  })();
+  const total = rows.reduce((a, r) => a + r.P.n, 0);
+  return `<p class="tnote">過去問${pastExams(g)}回の出題数（${total}問）。行をタップすると内訳と解き方。</p>${swHtml('exam', [['field', '分野'], ['form', '問いの形']])}${body}${lg}`;
+}
+
+function basicTable(g) {
+  const cls = REG.parts || {};
+  const pastParts = (part) => (part === 'r3' ? ['r3A', 'r3B'] : [part]);
+  // 網羅の分母 m の分野の集合。要約・英作文は過去問が3題しかないので 分類.json の分布（0.05以上）で決める
+  const partFields = (part) => {
+    if (part === 'essay' || part === 'sum') { const f = (((cls[part] || {})[gk(g)] || {}).field) || {}; return new Set(Object.keys(f).filter((k) => f[k] >= 0.05)); }
+    const P = sumPast(g, pastParts(part));
+    return new Set(Object.keys(P.field).filter((k) => P.field[k] > 0));
+  };
+  const out = [];
+  for (const gr of REG.groups) {
+    const ts = TILE_TYPES.filter((t) => TYPE_INFO[t].group === gr && gradeOk(t, g));
+    if (!ts.length) continue;
+    out.push(`<h5 class="bgr">${h(gr)}</h5>`);
+    for (const part of [...new Set(ts.map((t) => TYPE_INFO[t].part))]) {
+      const need = partFields(part);
+      out.push(`<div class="bpart"><div class="bph"><span>→ 本番の${PART_NAME[part]}</span>${bandHtml(fieldSegs(sumPast(g, pastParts(part)).field))}</div>`);
+      for (const t of ts.filter((x) => TYPE_INFO[x].part === part)) {
+        const its = itemsOf(g, t, true), fc = {};
+        its.forEach((it) => { fc[it.topic] = (fc[it.topic] || 0) + 1; });
+        const k = [...need].filter((f) => fc[f] > 0).length, full = k === need.size;
+        out.push(`<div class="brow"><div class="bt"><b>${h(TYPE_INFO[t].name)}</b><span>${its.length}問 ・ ${k}/${need.size} <em class="${full ? 'ok' : 'wn'}">${full ? '✓' : '△'}</em></span></div>${bandHtml(fieldSegs(fc))}</div>`);
+      }
+      out.push('</div>');
+    }
+  }
+  return `<p class="tnote">網羅 k/m ＝ 本番に出る分野 m 個のうち、この種類の問題がある分野 k 個。✓ は全部そろい、△ は足りない分野がある。</p>${out.join('')}${lgHtml(FG.map((x) => [x.col, x.name]))}`;
+}
+
+const MINI_SKILL = { R: ['r1', 'r2', 'r3A', 'r3B'], L: ['l1', 'l2', 'l3'] };
+function miniTable(g) {
+  const sk = MINI_SKILL[tipSel.mini], past = sumPast(g, sk), app = appCounts(g);
+  const am = {}, pm = {}; // 形 → 列（FG の番号）→ 問題数
+  sk.forEach((p) => Object.entries((app[p] || { ff: {} }).ff).forEach(([f, m]) => Object.entries(m).forEach(([fd, v]) => { (am[f] ||= [0, 0, 0, 0, 0])[FG.indexOf(fgOf(fd))] += v; })));
+  Object.entries(past.ff).forEach(([f, m]) => Object.entries(m).forEach(([fd, v]) => { (pm[f] ||= [0, 0, 0, 0, 0])[FG.indexOf(fgOf(fd))] += v; }));
+  let m = 0, k = 0;
+  const rows = FORM_ORDER.filter((f) => pm[f] || am[f]).map((f) => `<tr><td class="fn">${h(FORM_NAME[f])}</td>${MINI_COLS.map((gi) => {
+    const a = (am[f] || [])[gi] || 0, p = (pm[f] || [])[gi] || 0;
+    if (p) { m++; if (a) k++; }
+    const dot = a ? `<i class="dot s${a >= 15 ? 3 : a >= 5 ? 2 : 1}"></i>` : p ? '!' : '';
+    return `<td class="c${p ? ' past' : ''}${p && !a ? ' miss' : ''}" title="${h(FORM_NAME[f])}×${FG[gi].name} ${a}問">${dot}</td>`;
+  }).join('')}</tr>`).join('');
+  const head = `<tr><th></th>${MINI_COLS.map((gi) => `<th>${FG[gi].name.replace('歴史と', '歴史と<br>')}</th>`).join('')}</tr>`;
+  return `${swHtml('mini', [['R', 'リーディング'], ['L', 'リスニング']])}
+    <table class="mt"><colgroup><col style="width:72px"><col><col><col><col><col></colgroup>${head}${rows}</table>
+    <div class="tlg"><span><i class="dot s1"></i>1〜4問</span><span><i class="dot s2"></i>5〜14問</span><span><i class="dot s3"></i>15問以上</span><span><b class="lgbox"></b>本番に出た組み合わせ</span><span><b class="lgng">!</b>本番に出たがこのアプリに0問</span></div>
+    <p class="tnote"><b>網羅: 本番の組み合わせ ${k}/${m}</b>（点はこのアプリの問題数。空欄は0問）</p>`;
+}
+const SUB_TITLE = { exam: (g) => `過去3回の傾向（${GRADES[g]}）`, basic: () => '練習できる範囲（種類ごと）', mini: () => '問題の範囲（問いの形 × 分野）' };
+function renderSub(key, el) {
+  const g = store.grade;
+  el.innerHTML = key === 'exam' ? examTable(g) : key === 'basic' ? basicTable(g) : miniTable(g);
+  el.querySelectorAll('[data-sw]').forEach((b) => b.onclick = () => { tipSel[key] = b.dataset.sw; renderSub(key, el); });
+  el.querySelectorAll('[data-row]').forEach((b) => b.onclick = () => {
+    const id = b.dataset.row, open = !tipSel.rows.has(id);
+    if (open) tipSel.rows.add(id); else tipSel.rows.delete(id);
+    b.setAttribute('aria-expanded', open); b.nextElementSibling.hidden = !open;
+  });
+}
 function ring(n, goal, onDark = false) {
   const r = 40, c = 2 * Math.PI * r, p = Math.min(1, n / goal);
   return `<svg class="ring" viewBox="0 0 96 96"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff5f3a"/></linearGradient></defs>
@@ -762,7 +983,7 @@ function home() {
     ${entry('toExam', 'linear-gradient(135deg,#be123c,#f97316)', 'pen', '本番モード', `一次試験1回分の模試（筆記＋リスニング）<br>直近: ${resText(lastMock)}`)}
     <h2>おすすめ</h2>
     <div class="card" style="padding:6px 16px">
-      ${weak ? `<div class="reco"><span class="rl"><span class="dot" style="background:${TYPE_LOOK[weak][0]}">${icon(TYPE_LOOK[weak][1])}</span><span>${(store.stat[g] || {})[weak] ? '苦手を鍛える' : 'まだ解いていない'}<br><b>${TYPE_INFO[weak].name}</b></span></span><button id="weak">5問</button></div>` : ''}
+      ${weak ? `<div class="reco"><span class="rl"><span class="dot" style="background:${lookOf(weak)[0]}">${icon(lookOf(weak)[1])}</span><span>${(store.stat[g] || {})[weak] ? '苦手を鍛える' : 'まだ解いていない'}<br><b>${TYPE_INFO[weak].name}</b></span></span><button id="weak">5問</button></div>` : ''}
       <div class="reco"><span class="rl"><span class="dot" style="background:#0e9f8a">${icon('repeat')}</span><span>忘れかけた問題<br><b>復習待ち ${dueN}問</b></span></span><button id="due" ${dueN ? '' : 'disabled'}>復習</button></div>
       <div class="reco"><span class="rl"><span class="dot" style="background:#e0457b">${icon('words')}</span><span>文の中で覚える<br><b>単語・熟語</b></span></span><button id="vmix">10問</button></div>
     </div>
@@ -797,12 +1018,8 @@ function problems() {
       <button class="big sub" id="vmix">${icon('words')}単語・熟語</button>
       <button class="big sub" id="wrong" ${wrong ? '' : 'disabled'}>${icon('repeat')}間違えた ${wrong}</button>
     </div>
-    <h2>英作文の力（英作文を1文ずつ組み立てる）</h2>
-    <div class="grid">${tiles(g, ESSAY_DRILLS)}</div>
-    <h2>要約の力（段落を1文にまとめる）</h2>
-    <div class="grid">${tiles(g, SUMMARY_DRILLS)}</div>
-    <h2>単語・熟語（文の中で覚える・大問1を含む）</h2>
-    <div class="grid">${tiles(g, VOCAB_TYPES)}</div>`;
+    ${REG.groups.map((gr) => { const ts = TILE_TYPES.filter((t) => TYPE_INFO[t].group === gr && gradeOk(t, g)); return ts.length ? `<h2>${gr}${GROUP_NOTE[gr] ? `（${GROUP_NOTE[gr]}）` : ''}</h2>
+    <div class="grid">${tiles(g, ts)}</div>` : ''; }).join('')}`;
   bindTips();
   app.querySelectorAll('[data-lv]').forEach((b) => b.onclick = () => { store.set.level = b.dataset.lv; save(); show('problems'); });
   app.querySelectorAll('[data-mode]').forEach((b) => b.onclick = () => { store.set.mode = b.dataset.mode; save(); show('problems'); });
@@ -842,43 +1059,74 @@ const MOCK_ANSWER_SEC = 10;
 // ミニテスト（約15分）: 大問1 6問・長文1題（大問2と大問3を交互）・リスニング4〜5問。ライティングは含めない
 const MINI = { min: 12, wmin: { sum: 15, essay: 20 }, r1: 6, l: { '2': [['listen1', 2], ['listen2', 2]], p1: [['listen1', 2], ['listen2', 1], ['listen3', 1]] } };
 // 選んだ技能（store.set.mini = { R, W, L, wt: 'sum' | 'essay' }）で組めないものの一覧
-function miniShort(g, o = store.set.mini) {
-  const out = [];
-  if (o.R && (poolOf(g, 'daimon1').length < MINI.r1 || (!poolOf(g, 'reading2').length && !poolOf(g, 'reading3').length))) out.push('リーディング');
-  if (o.W && !poolOf(g, o.wt === 'essay' ? 'essay_full' : 'summary_full').length) out.push('ライティング');
-  if (o.L && MINI.l[g].some(([t, n]) => poolOf(g, t).length < n)) out.push('リスニング');
+function miniShort(g, o = store.set.mini, set = null) {
+  const out = [], P = (t) => poolOf(g, t, set);
+  if (o.R && (P('daimon1').length < MINI.r1 || (!P('reading2').length && !P('reading3').length))) out.push('リーディング');
+  if (o.W && !P(o.wt === 'essay' ? 'essay_full' : 'summary_full').length) out.push('ライティング');
+  if (o.L && MINI.l[g].some(([t, n]) => P(t).length < n)) out.push('リスニング');
   if (!o.R && !o.W && !o.L) out.push('技能を選ぶ');
   return out;
 }
-function newMini(g) {
+function newMini(g, set = null) {
   const o = store.set.mini, ids = (a) => a.map((it) => it.id), k = store.mocks.filter((r) => r.mini && r.g === g && r.R[1]).length;
-  const useR2 = poolOf(g, 'reading2').length && (k % 2 === 0 || !poolOf(g, 'reading3').length);
-  const wt = o.W ? o.wt : null, wIt = wt ? pickFresh(poolOf(g, wt === 'essay' ? 'essay_full' : 'summary_full'), 1)[0].id : null;
-  const m = { g, set: null, mini: true, at: Date.now(), used: 0, limit: ((o.R ? MINI.min : 0) + (wt ? MINI.wmin[wt] : 0)) * 60, phase: 'rw',
-    r1: o.R ? ids(pickFresh(poolOf(g, 'daimon1'), MINI.r1)) : [], r2: o.R && useR2 ? ids(pickFresh(poolOf(g, 'reading2'), 1)) : [],
-    r3: o.R && !useR2 ? ids(pickFresh(poolOf(g, 'reading3'), 1)) : [], sum: wt === 'sum' ? wIt : null, essay: wt === 'essay' ? wIt : null,
-    l: o.L ? MINI.l[g].flatMap(([t, n]) => ids(pickFresh(poolOf(g, t), n))) : [], li: 0, seed: Math.floor(Math.random() * 1e9), ans: {}, text: { sum: '', essay: '' }, self: {} };
+  const pool = (t) => poolOf(g, t, set);
+  const useR2 = pool('reading2').length && (k % 2 === 0 || !pool('reading3').length);
+  const wt = o.W ? o.wt : null, wIt = wt ? pickFresh(pool(wt === 'essay' ? 'essay_full' : 'summary_full'), 1, lvPlan(g, wt))[0].id : null;
+  const m = { g, set, mini: true, at: Date.now(), used: 0, limit: ((o.R ? MINI.min : 0) + (wt ? MINI.wmin[wt] : 0)) * 60, phase: 'rw',
+    r1: o.R ? ids(pickR1(g, pool('daimon1'), MINI.r1)) : [], r2: o.R && useR2 ? ids(pickFresh(pool('reading2'), 1, lvPlan(g, 'r2'))) : [],
+    r3: o.R && !useR2 ? ids(pickR3(g, pool('reading3'))) : [], sum: wt === 'sum' ? wIt : null, essay: wt === 'essay' ? wIt : null,
+    l: o.L ? MINI.l[g].flatMap(([t, n]) => ids(pickFresh(pool(t), n, lvPlan(g, TYPE_INFO[t].part)))) : [], li: 0, seed: Math.floor(Math.random() * 1e9), ans: {}, text: { sum: '', essay: '' }, self: {} };
   m.sec = (mockSecsOf(m)[0] || ['r1'])[0];
   if (!o.R && !wt) m.phase = 'l0'; // リスニングだけ
   store.mock = m; save();
 }
 // 筆記の後: リスニング → なければ自己採点 → なければ結果
 function afterRW(m) { m.phase = m.l.length ? 'l0' : (m.sum || m.essay) ? 'wself' : 'done'; save(); if (m.phase === 'done') mockFinish(m); else mockView(); }
-const mockName = (m) => (m.mini ? 'ミニテスト' : m.set ? MOCK_SETS.find(([k]) => k === m.set)[1] : 'おまかせ模試');
+const mockName = (m) => (m.set ? setName(m.set) : m.mini ? 'ミニテスト' : 'おまかせ模試');
 const mockSecsOf = (m) => MOCK_SECS.filter(([k]) => (k === 'r1' ? m.r1.length : k === 'r2' ? m.r2.length : k === 'r3' ? m.r3.length : !!m[k]));
 // 予測模試（set が付いた問題で組む固定の回）。set の付かない問題は「おまかせ模試」で使う
 const MOCK_SETS = [['Y1', '予測模試 第1回'], ['Y2', '予測模試 第2回'], ['Y3', '予測模試 第3回']];
-const poolOf = (g, t, set = null) => ((DATA[g] || {})[t] || []).filter((it) => (set ? it.set === set : !it.set));
+const setName = (k) => (MOCK_SETS.find(([x]) => x === k) || [k, k])[1];
+// 模試・ミニテストの問題。set なし（おまかせ）は、2級に文法問題を出さない（2026-11-15 形の点検）。
+// 難しさ（level）は、本番の割合（素材/分類.json の parts.<大問>.<g2|p1>.level）に合わせて pickFresh が選ぶ（2026-11-15。以前の「Lv1 を外す」暫定はやめた）
+const poolOf = (g, t, set = null) => ((DATA[g] || {})[t] || []).filter((it) => (set ? it.set === set
+  : !it.set && !(t === 'daimon1' && g === '2' && it.kind === 'grammar')));
+// 大問（part。reading3 は r3A・r3B）の level の目標の割合 { '1': 0.33, '2': 0.52, '3': 0.15 }
+const lvPlan = (g, part) => { const p = (REG.parts[part] || {})[g === '2' ? 'g2' : 'p1']; return p && p.level ? p.level : null; };
+// 大問1は本番と同じ割合で単語を先・熟語を後に（2級 17問=単語10・熟語7、準1級 18問=単語14・熟語4。過去問3回で同じ）
+const R1_WORD = { '2': 10 / 17, p1: 14 / 18 };
+function pickR1(g, arr, n) {
+  const pl = lvPlan(g, 'r1'), nw = Math.round(n * R1_WORD[g]), w = pickFresh(arr.filter((x) => x.kind !== 'idiom'), nw, pl), i = pickFresh(arr.filter((x) => x.kind === 'idiom'), n - w.length, pl);
+  const got = [...w, ...i], rest = pickFresh(arr.filter((x) => !got.includes(x)), n - got.length, pl);
+  return [...got, ...rest].sort((a, b) => (a.kind === 'idiom') - (b.kind === 'idiom'));
+}
+// ミニテストの大問3は1題: A・B を本番の題数の比で選び、その中で level の割合に合わせる
+function pickR3(g, arr) {
+  const A = arr.filter((x) => x.part === 'A'), B = arr.filter((x) => x.part === 'B'), c = (k) => (REG.parts[k].count || {})[g === '2' ? 'g2' : 'p1'] || 1;
+  const part = !B.length || (A.length && Math.random() < c('r3A') / (c('r3A') + c('r3B'))) ? 'A' : 'B';
+  return pickFresh(part === 'A' ? A : B, 1, lvPlan(g, 'r3' + part));
+}
 let mockIndex = null;
 function mockItem(g, id) {
   if (!mockIndex || mockIndex.g !== g || mockIndex.d !== DATA[g]) { mockIndex = { g, d: DATA[g], m: {} }; for (const [t, arr] of Object.entries(DATA[g] || {})) for (const it of arr) mockIndex.m[it.id] = { ...it, type: t }; }
   return mockIndex.m[id];
 }
-function pickFresh(arr, n) {
+function pickFresh(arr, n, plan = null) {
   // 模試で使ったものと、基礎トレで解いたもの（英作文・要約は1文ずつの親）を後回しにする（2026-11-14 監査: 模範を見た題で自己採点すると Lv4・5 が甘くなる）
   const seen = new Set(Object.keys(store.rec).map((k) => k.split('#')[0]));
   const used = new Proxy({}, { get: (_, id) => store.mockUsed[id] || seen.has(id) });
-  return [...shuffle(arr.filter((it) => !used[it.id])), ...shuffle(arr.filter((it) => used[it.id]))].slice(0, n);
+  const ord = (a) => [...shuffle(a.filter((it) => !used[it.id])), ...shuffle(a.filter((it) => used[it.id]))];
+  if (!plan) return ord(arr).slice(0, n);
+  // level ごとの本数を、割合から決める（端数は割合に比例した確率で配る。1問ずつ選ぶ場面でも長い目で割合に合う）。足りない level の分は、ほかの level で補う
+  const lvs = Object.keys(plan), need = {}; let left = n;
+  for (const l of lvs) { need[l] = Math.floor(n * plan[l]); left -= need[l]; }
+  while (left > 0) { const w = lvs.map((l) => n * plan[l] - Math.floor(n * plan[l]) + 1e-6), r = Math.random() * w.reduce((a, b) => a + b, 0); let k = 0, acc = w[0]; while (acc < r && k < lvs.length - 1) acc += w[++k]; need[lvs[k]]++; left--; }
+  const by = {}; ord(arr).forEach((it) => (by[String(it.level || 2)] ||= []).push(it));
+  const out = [];
+  for (const l of lvs) out.push(...(by[l] || []).splice(0, need[l]));
+  const rest = ord(Object.values(by).flat()); // 足りなかった分は、残りから（使っていない問題が先）
+  while (out.length < n && rest.length) out.push(rest.shift());
+  return shuffle(out);
 }
 // 1回分を組むのに足りない部分の一覧
 function mockShort(g, set = null) {
@@ -900,13 +1148,13 @@ function mockFreshCount(g) {
 function newMock(g, set = null) {
   const c = MOCK[g], P = (t) => poolOf(g, t, set), r3 = P('reading3'), ids = (a) => a.map((it) => it.id);
   // 予測模試は決まった順（id 順）。大問1が足りないときだけ共通の問題で補う
-  const ord = (a, n) => (set ? a.slice().sort((x, y) => (x.id < y.id ? -1 : 1)).slice(0, n) : pickFresh(a, n));
-  let r1 = ord(P('daimon1'), c.r1); if (r1.length < c.r1) r1 = r1.concat(pickFresh(poolOf(g, 'daimon1'), c.r1 - r1.length));
+  const ord = (a, n, part) => (set ? a.slice().sort((x, y) => (x.id < y.id ? -1 : 1)).slice(0, n) : pickFresh(a, n, lvPlan(g, part)));
+  let r1 = set ? ord(P('daimon1'), c.r1) : pickR1(g, P('daimon1'), c.r1); if (r1.length < c.r1) r1 = r1.concat(pickFresh(poolOf(g, 'daimon1'), c.r1 - r1.length, lvPlan(g, 'r1')));
   store.mock = { g, set, at: Date.now(), used: 0, limit: c.min * 60, phase: 'rw', sec: 'r1',
-    r1: ids(r1), r2: ids(ord(P('reading2'), c.r2)),
-    r3: ['A', 'B'].map((p) => ord(r3.filter((x) => x.part === p), 1)[0].id),
-    sum: ord(P('summary_full'), 1)[0].id, essay: ord(P('essay_full'), 1)[0].id,
-    l: c.l.flatMap(([t, n]) => ids(ord(P(t), n))), li: 0, seed: Math.floor(Math.random() * 1e9), ans: {}, text: { sum: '', essay: '' }, self: {} };
+    r1: ids(r1), r2: ids(ord(P('reading2'), c.r2, 'r2')),
+    r3: ['A', 'B'].map((p) => ord(r3.filter((x) => x.part === p), 1, 'r3' + p)[0].id),
+    sum: ord(P('summary_full'), 1, 'sum')[0].id, essay: ord(P('essay_full'), 1, 'essay')[0].id,
+    l: c.l.flatMap(([t, n]) => ids(ord(P(t), n, TYPE_INFO[t].part))), li: 0, seed: Math.floor(Math.random() * 1e9), ans: {}, text: { sum: '', essay: '' }, self: {} };
   save();
 }
 // 採点する設問の一覧: { key, sec, no, q, choices, answer, it }
@@ -952,9 +1200,12 @@ function bindMockChoices(m) {
     const n = app.querySelector(`[data-sec="${m.sec}"] small`); if (n) n.textContent = mockSecDone(m, m.sec);
   });
 }
+// 問題を差し替えた（素材/_保留 へ移した）あとに、途中・直近の模試が消えた問題を指していないか（2026-11-15 形の点検の作り直し）
+const mockIdsOk = (m) => [...m.r1, ...m.r2, ...m.r3, ...m.l, m.sum, m.essay].filter(Boolean).every((id) => mockItem(m.g, id));
 function mockView() {
   const m = store.mock;
   if (!m) return show('exam');
+  if (m.g === store.grade && !mockIdsOk(m)) { const wasMini = m.mini; store.mock = null; save(); alert('問題を新しくしたため、途中の' + (wasMini ? 'ミニテスト' : '模擬試験') + 'は続けられません。もう一度始めてください。'); return show(wasMini ? 'mini' : 'exam'); }
   if (m.g !== store.grade) { app.innerHTML = `<div class="card">${GRADES[m.g]}の模擬試験が途中です。上の切り替えで${GRADES[m.g]}にすると続きができます。</div>`; return; }
   clearInterval(mockTick); mockTok++;
   if (hasTTS) speechSynthesis.cancel();
@@ -1127,7 +1378,7 @@ function growCard(r, up) {
 }
 const MOCK_PN = { r1: '大問1', r2: '大問2', r3: '大問3', listen1: 'L 第1部', listen2: 'L 第2部', listen3: 'L 第3部' };
 function mockResult(idx, up = null) {
-  const r = store.mocks[idx], m = store.lastMock && store.lastMock.done === r.at ? store.lastMock : null;
+  const r = store.mocks[idx], m = store.lastMock && store.lastMock.done === r.at && mockIdsOk(store.lastMock) ? store.lastMock : null;
   document.body.classList.add('quiz');
   const bar = (name, [ok, n]) => { const p = n ? Math.round((ok / n) * 100) : 0; return `<div class="mres"><b>${name}</b><div class="mbar"><i style="width:${p}%" class="${p >= 70 ? 'ok' : p >= 60 ? 'mid' : 'low'}"></i><u></u></div><span>${ok}/${n}（${p}%）</span></div>`; };
   let review = '';
@@ -1140,7 +1391,7 @@ function mockResult(idx, up = null) {
         ${q.choices.map((c, i) => `<div class="choice ${i === q.answer ? 'ok' : i === my ? 'ng' : ''}"><span class="lt">${i + 1}</span><span class="ct">${h(c.t)}<span class="why" style="display:block">${h(c.why || '')}</span></span></div>`).join('')}</details>`;
     }).join('');
   }
-  app.innerHTML = `<div class="card intro"><b>${r.mini ? 'ミニテスト' : '模擬試験'}の結果（${GRADES[r.g]}${r.set ? '・' + MOCK_SETS.find(([k]) => k === r.set)[1] : ''}）</b><span>${new Date(r.at).toLocaleDateString('ja-JP')}・筆記 ${r.min}分</span></div>
+  app.innerHTML = `<div class="card intro"><b>${r.mini ? 'ミニテスト' : '模擬試験'}の結果（${GRADES[r.g]}${r.set ? '・' + setName(r.set) : ''}）</b><span>${new Date(r.at).toLocaleDateString('ja-JP')}・筆記 ${r.min}分</span></div>
     <div class="card">${r.R[1] ? bar('リーディング', r.R) : ''}${r.L[1] ? bar('リスニング', r.L) : ''}${r.W[1] ? bar('ライティング', r.W) : ''}
       <p class="muted" style="margin:10px 0 0">縦線は正答率65%。合格の目安は各技能でおよそ6〜7割（英検協会の公式な換算ではない）。${r.W[1] ? `ライティングは自己採点（${r.W[1] === 32 ? `要約 ${r.sum}/16・英作文 ${r.essay}/16` : `${r.W[0]}/16`}）。` : ''}</p></div>
     <div class="card">${Object.entries(r.parts).map(([k, v]) => bar(MOCK_PN[k], v)).join('')}</div>
@@ -1164,7 +1415,7 @@ const otherPendingNote = (g, mini) => { const m = mockPending(g);
   return m && !!m.mini !== mini ? `<p class="muted" style="margin:8px 4px">${m.mini ? 'ミニテスト' : '模擬試験'}が途中です（${m.mini ? 'ミニテスト' : '本番'}タブで続きから）。ここで始めると、途中の分は消えます。</p>` : ''; };
 const okToStart = (g) => { const m = mockPending(g); return !m || confirm(`途中の${m.mini ? 'ミニテスト' : '模擬試験'}は消えます。新しく始めますか？`); };
 const histRows = (g, mini) => { const hist = store.mocks.filter((r) => r.g === g && !!r.mini === mini).slice(-5).reverse();
-  return hist.length ? `<div class="card"><div class="label">これまでの結果</div>${hist.map((r) => `<button class="linkbtn mhist" data-mr="${store.mocks.indexOf(r)}">${new Date(r.at).toLocaleDateString('ja-JP')} ${r.mini ? 'ミニ' : r.set ? MOCK_SETS.find(([k]) => k === r.set)[1] : 'おまかせ'}：${[r.R[1] ? `R ${r.R[0]}/${r.R[1]}` : '', r.L[1] ? `L ${r.L[0]}/${r.L[1]}` : '', r.W[1] ? `W ${r.W[0]}/${r.W[1]}` : ''].filter(Boolean).join('・')}</button>`).join('')}</div>` : ''; };
+  return hist.length ? `<div class="card"><div class="label">これまでの結果</div>${hist.map((r) => `<button class="linkbtn mhist" data-mr="${store.mocks.indexOf(r)}">${new Date(r.at).toLocaleDateString('ja-JP')} ${r.set ? setName(r.set) : r.mini ? 'ミニ' : 'おまかせ'}：${[r.R[1] ? `R ${r.R[0]}/${r.R[1]}` : '', r.L[1] ? `L ${r.L[0]}/${r.L[1]}` : '', r.W[1] ? `W ${r.W[0]}/${r.W[1]}` : ''].filter(Boolean).join('・')}</button>`).join('')}</div>` : ''; };
 // 本番タブ: 模擬試験だけ（予測模試3回＋おまかせ模試）
 function mockCards(g) {
   const rc = resumeCard(g, false); if (rc) return rc;
@@ -1377,7 +1628,7 @@ const react = (correct) => `<span class="react">${charaImg(lv(), correct ? 'jump
 function explainBox(it) {
   // 回答例のあとに「なぜこの英文になるのか」を出す
   const alt = /別の言い方[:：]\s*(.+)$/.exec(it.explain || '');
-  return `<div class="explain"><div class="eh">${icon('bulb', 'style="width:16px;height:16px"')}この英文の組み立て</div><div class="en">${h(it.drive.en)}${spk(it.drive.en)}</div>${h(it.explain || it.choices[it.answer].why)}${alt ? spk(alt[1]) : ''}</div>`;
+  return `<div class="explain"><div class="eh">${icon('bulb', 'style="width:16px;height:16px"')}${h(it.exHead || 'この英文の組み立て')}</div><div class="en">${h(it.drive.en)}${spk(it.drive.en)}</div>${h(it.explain || it.choices[it.answer].why)}${alt ? spk(alt[1]) : ''}</div>`;
 }
 
 // ---------- 本番形式（通し） ----------
@@ -1518,18 +1769,44 @@ function fullQuestion() {
   render();
 }
 
+// ---------- リスニングの1問ずつ（l1_step・l2_step・l3_step）: 模試の放送（sayMock）を使い回す ----------
+let lsnTok = 0, lsnOn = false;
+function stopListen() { lsnTok++; if (lsnOn && hasTTS) speechSynthesis.cancel(); lsnOn = false; }
+const lsnWait = (n) => new Promise((ok) => setTimeout(ok, window.MOCK_FAST ? 0 : n * 1000));
+function listenHead(it) {
+  return `<div class="lsn" style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span id="lstat" class="muted">${it.lead ? '状況と質問を読む' : '放送を始めます'}</span><button class="chipbtn" id="lagain" disabled>${icon('speaker')}もう一度聞く</button></div>
+    ${it.situation ? `<div class="exam"><p class="sit"><span class="tag">Situation</span>${h(it.situation)}</p><p class="qq"><span class="tag">Question</span>${h(it.q)}</p></div>`
+      : `<div id="qreveal" style="display:none"><div class="q"><span class="tag" style="font-size:11px;font-weight:900;background:var(--navy2);color:#fff;border-radius:6px;padding:2px 7px;margin-right:8px">Question</span>${h(it.q)}</div></div>`}`;
+}
+// first: 最初の1回は、状況と質問を読む時間（lead 秒）のあとに放送する。2回目以降（もう一度聞く）はすぐ放送する
+async function lsnPlay(it, first) {
+  const tok = ++lsnTok, set = (t) => { const e = document.getElementById('lstat'); if (e) e.textContent = t; }, ag = document.getElementById('lagain');
+  if (hasTTS) speechSynthesis.cancel();
+  lsnOn = true; if (ag) ag.disabled = true;
+  if (first && it.lead) {
+    await sayMock('Number one.', 'N'); // 最初の発話は押した直後に同期で呼ぶ（iPhone）。模試の第3部と同じ前置き
+    for (let n = it.lead; n > 0; n--) { if (tok !== lsnTok) return; set(`状況と質問を読む時間 あと${n}秒`); await lsnWait(1); }
+  }
+  for (const [t, sp] of it.say) { if (tok !== lsnTok) return; set('放送中…'); await sayMock(t, sp); }
+  if (tok !== lsnTok) return;
+  lsnOn = false; set('選択肢から答えを選ぶ');
+  const box = document.getElementById('choices'); if (box) box.style.display = '';
+  if (ag) ag.disabled = false;
+}
 function question() {
   if (TYPE_INFO[session.items[session.i].type].full) return fullQuestion();
   const s = session, it = s.items[s.i];
   const info = TYPE_INFO[it.type];
   const input = store.set.mode === 'input' && !info.choiceOnly; // 日本語で選ぶ種類は、入力式でも選択式で出す
   const order = shuffle(it.choices.map((c, idx) => idx));
+  const lis = Array.isArray(it.say); // リスニングの1問ずつ: 放送が終わってから4択を出す
+  stopListen();
   app.innerHTML = `
     <div class="top"><button id="quit">やめる</button><span class="grow">${h(s.title)} ${s.i + 1}/${s.items.length}</span><span class="timer" id="timer">0秒</span></div>
     <div class="progress"><i style="width:${(s.i / s.items.length) * 100}%"></i></div>
     <div class="card">
       <div class="label"><span class="lv">Lv${it.level || 2}</span> ${info.name} — ${input && !info.cloze ? info.write : info.hint}</div>
-      <div class="qhead"><div class="q">${qToHtml(it)}</div>${spk(speakableQ(it))}</div>
+      ${lis ? listenHead(it) : `<div class="qhead"><div class="q">${qToHtml(it)}</div>${spk(speakableQ(it))}</div>`}
       ${it.q_ja ? `<div class="qja" id="qja" style="display:none">${h(it.q_ja)}</div>` : ''}
     </div>
     ${input ? (info.cloze
@@ -1539,7 +1816,7 @@ function question() {
       : `<div class="card"><textarea id="ans" class="ans" rows="4" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" lang="en"
            placeholder="自分の英文を書く（頭の中で考えるだけでもよい）"></textarea>
            <button class="big" id="submit">模範解答を見る</button></div>`)
-    : `<div id="choices">${order.map((idx, k) => `<button class="choice" data-i="${idx}"><span class="lt">${'ABCDEF'[k]}</span><span class="ct">${h(it.choices[idx].t)}<span class="why">${h(it.choices[idx].why)}</span></span></button>`).join('')}</div>`}
+    : `<div id="choices" ${lis ? 'style="display:none"' : ''}>${order.map((idx, k) => `<button class="choice" data-i="${idx}"><span class="lt">${'ABCDEF'[k]}</span><span class="ct">${h(it.choices[idx].t)}<span class="why">${h(it.choices[idx].why)}</span></span></button>`).join('')}</div>`}
     <div id="after"></div><div style="height:90px"></div>`;
   const goal = targetSec(it.type, store.grade), t0 = Date.now();
   const timerEl = app.querySelector('#timer');
@@ -1557,6 +1834,7 @@ function question() {
     timerEl.textContent = `${(ms / 1000).toFixed(1)}秒` + (goal ? (inTime ? ' ✓' : ' 超過') : '');
     timerEl.classList.toggle('over', !inTime);
     const qja = app.querySelector('#qja'); if (qja) qja.style.display = 'block';
+    const qr = app.querySelector('#qreveal'); if (qr) qr.style.display = 'block';
     return ms;
   };
   const finish = (correct, ms) => { grade(it, correct, ms, input ? 'input' : null); if (correct) s.ok++; else s.wrong.push(it); };
@@ -1569,6 +1847,7 @@ function question() {
     if (store.set.autoRead) say(it.drive.en, 'en-US', true);
   };
   bindSpeakers(app);
+  if (lis) { const ag = app.querySelector('#lagain'); ag.onclick = () => lsnPlay(it, false); lsnPlay(it, true); }
 
   if (input) {
     const ans = app.querySelector('#ans');
