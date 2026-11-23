@@ -355,7 +355,7 @@
 <nav class="tabs" id="tabs"></nav>
 <script>
 const CHARAS = [{"id":"standard","name":"スタンダード"},{"id":"c2","name":"ブラウン"},{"id":"c3","name":"ホワイト"},{"id":"c4","name":"宇宙人"}];
-const BUILD = "20261123-c6dc3dbe";
+const BUILD = "20261123-6eeef7c5";
 // 問題データは級ごとの別ファイル（data-2.js / data-p1.js）。選んだ級だけを読む（2026-11-14 index.html が 3.2MB になったため）
 const DATA = {};
 const dataLoading = {};
@@ -790,15 +790,26 @@ function bindTips() {
 }
 // ---------- コツの中の表（過去問の傾向・練習できる範囲・問題の範囲。開いたときに初めて計算して描く） ----------
 // 過去問の数は build.mjs が REG.past に埋め込む（級 → 大問 → {n, field, form, ff, scene}）。このアプリの数は DATA から数える（set 付きの予測模試は除く）
-const FG = [ // 帯の色は5つ（日常・歴史と科学・教育・社会・その他）
+const FG = [ // 帯の色は7つ（2026-11-23 ユーザー指示: 社会の5分野を1色にすると社会に偏って見えるので3つに分ける）。最後は「その他」
   { id: 'daily', name: '日常', ids: ['daily'], col: '#ff7a45' },
   { id: 'hs', name: '歴史と科学', ids: ['history', 'science'], col: '#1fa595' },
   { id: 'edu', name: '教育', ids: ['edu'], col: '#3b4fd8' },
-  { id: 'soc', name: '社会', ids: ['tech', 'env', 'health', 'work', 'community'], col: '#8a5cd6' },
+  { id: 'te', name: 'テクノロジー・環境', ids: ['tech', 'env'], col: '#8a5cd6' },
+  { id: 'hw', name: '健康・働き方', ids: ['health', 'work'], col: '#d64f8f' },
+  { id: 'cm', name: '地域', ids: ['community'], col: '#e8a317' },
   { id: 'oth', name: 'その他', ids: [], col: '#aab0c0' },
 ];
+// ミニテストの表（問いの形×分野）は幅が狭いので4列のまま（日常・教育・歴史と科学・社会）
+const FG4 = [
+  { id: 'daily', name: '日常', ids: ['daily'] },
+  { id: 'hs', name: '歴史と科学', ids: ['history', 'science'] },
+  { id: 'edu', name: '教育', ids: ['edu'] },
+  { id: 'soc', name: '社会', ids: ['tech', 'env', 'health', 'work', 'community'] },
+  { id: 'oth', name: 'その他', ids: [] },
+];
+const fg4Of = (f) => FG4.find((x) => x.ids.includes(f)) || FG4[4];
 const MINI_COLS = [0, 2, 1, 3]; // ミニテストの列順（日常・教育・歴史と科学・社会。9分野はこの4つのどれかに入るので「その他」の列は出さない）
-const fgOf = (f) => FG.find((x) => x.ids.includes(f)) || FG[4];
+const fgOf = (f) => FG.find((x) => x.ids.includes(f)) || FG[FG.length - 1];
 const FIELD_SHORT = { tech: 'テクノロジー', edu: '教育・学び', env: '環境', health: '健康・医療', work: '働き方・経済', community: '地域・福祉', science: '自然科学', history: '歴史・文化', daily: '日常' };
 const fieldName = (id) => FIELD_SHORT[id] || (REG.fields.find((f) => f.id === id) || {}).name || id;
 const FORM_NAME = { word: '単語', idiom: '熟語', grammar: '文法', content: '内容の句', connector: 'つなぎ語', why: '理由', purpose: '目的', detail: '詳細', problem: '問題点', next: '次の行動', suggest: '提案・依頼', inference: '推論', opinion: '考え', complete: '文完成', true: '全体で正しい', reallife: '状況に合う行動' };
@@ -919,16 +930,16 @@ const MINI_SKILL = { R: ['r1', 'r2', 'r3A', 'r3B'], L: ['l1', 'l2', 'l3'] };
 function miniTable(g) {
   const sk = MINI_SKILL[tipSel.mini], past = sumPast(g, sk), app = appCounts(g);
   const am = {}, pm = {}; // 形 → 列（FG の番号）→ 問題数
-  sk.forEach((p) => Object.entries((app[p] || { ff: {} }).ff).forEach(([f, m]) => Object.entries(m).forEach(([fd, v]) => { (am[f] ||= [0, 0, 0, 0, 0])[FG.indexOf(fgOf(fd))] += v; })));
-  Object.entries(past.ff).forEach(([f, m]) => Object.entries(m).forEach(([fd, v]) => { (pm[f] ||= [0, 0, 0, 0, 0])[FG.indexOf(fgOf(fd))] += v; }));
+  sk.forEach((p) => Object.entries((app[p] || { ff: {} }).ff).forEach(([f, m]) => Object.entries(m).forEach(([fd, v]) => { (am[f] ||= [0, 0, 0, 0, 0])[FG4.indexOf(fg4Of(fd))] += v; })));
+  Object.entries(past.ff).forEach(([f, m]) => Object.entries(m).forEach(([fd, v]) => { (pm[f] ||= [0, 0, 0, 0, 0])[FG4.indexOf(fg4Of(fd))] += v; }));
   let m = 0, k = 0;
   const rows = FORM_ORDER.filter((f) => pm[f] || am[f]).map((f) => `<tr><td class="fn">${h(FORM_NAME[f])}</td>${MINI_COLS.map((gi) => {
     const a = (am[f] || [])[gi] || 0, p = (pm[f] || [])[gi] || 0;
     if (p) { m++; if (a) k++; }
     const dot = a ? `<i class="dot s${a >= 15 ? 3 : a >= 5 ? 2 : 1}"></i>` : p ? '!' : '';
-    return `<td class="c${p ? ' past' : ''}${p && !a ? ' miss' : ''}" title="${h(FORM_NAME[f])}×${FG[gi].name} ${a}問">${dot}</td>`;
+    return `<td class="c${p ? ' past' : ''}${p && !a ? ' miss' : ''}" title="${h(FORM_NAME[f])}×${FG4[gi].name} ${a}問">${dot}</td>`;
   }).join('')}</tr>`).join('');
-  const head = `<tr><th></th>${MINI_COLS.map((gi) => `<th>${FG[gi].name.replace('歴史と', '歴史と<br>')}</th>`).join('')}</tr>`;
+  const head = `<tr><th></th>${MINI_COLS.map((gi) => `<th>${FG4[gi].name.replace('歴史と', '歴史と<br>')}</th>`).join('')}</tr>`;
   return `${swHtml('mini', [['R', 'リーディング'], ['L', 'リスニング']])}
     <table class="mt"><colgroup><col style="width:72px"><col><col><col><col><col></colgroup>${head}${rows}</table>
     <div class="tlg"><span><i class="dot s1"></i>1〜4問</span><span><i class="dot s2"></i>5〜14問</span><span><i class="dot s3"></i>15問以上</span><span><b class="lgbox"></b>本番に出た組み合わせ</span><span><b class="lgng">!</b>本番に出たがこのアプリに0問</span></div>
