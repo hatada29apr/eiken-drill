@@ -346,6 +346,15 @@
   .growlist { margin: 6px 0 0; font-size: 12px; font-weight: 700; opacity: .9; display: grid; gap: 2px; }
   .growlist .okl { color: #7ee2a8; }
   .growup { text-align: center; font-weight: 900; font-size: 17px; color: var(--navy2); background: linear-gradient(90deg, #fff3d6, #ffe0c2, #fff3d6); border-radius: 14px; padding: 10px; margin: 8px 0; animation: popIn .4s ease-out; }
+  /* 合格支援（2026-11-24）: 自動チェック・合格まで・試験まで */
+  .wchk { list-style: none; margin: 6px 0 0; padding: 0; font-size: 14px; } .wchk li { display: flex; gap: 8px; padding: 4px 0; } .wchk li i { font-style: normal; font-weight: 900; width: 16px; flex: none; text-align: center; }
+  .wchk .ok i { color: var(--ok); } .wchk .warn i { color: #c27c0e; } .wchk .ng i { color: var(--ng); } .wchk .info i { color: var(--sub); }
+  .wchk-pv { font-size: 14px; line-height: 1.7; background: #f7f8fb; border-radius: 10px; padding: 8px 10px; margin: 8px 0 0; white-space: pre-wrap; } .wchk-pv u { text-decoration-color: var(--ng); text-decoration-thickness: 2px; background: var(--ngbg); }
+  .aitext { width: 100%; box-sizing: border-box; font-size: 12px; margin-top: 8px; }
+  .cse { display: grid; grid-template-columns: 92px 1fr 92px; align-items: center; gap: 8px; margin: 6px 0; font-size: 14px; } .cse span { text-align: right; font-variant-numeric: tabular-nums; }
+  .cse .mbar u { left: var(--pl); }
+  .exdays { display: flex; align-items: baseline; gap: 8px; } .exdays b { font-size: 22px; font-weight: 900; color: var(--orange1); }
+  .focus { margin: 8px 0 0; padding-left: 20px; font-size: 14.5px; }
 </style>
 </head>
 <body>
@@ -355,7 +364,7 @@
 <nav class="tabs" id="tabs"></nav>
 <script>
 const CHARAS = [{"id":"standard","name":"スタンダード"},{"id":"c2","name":"ブラウン"},{"id":"c3","name":"ホワイト"},{"id":"c4","name":"宇宙人"}];
-const BUILD = "20261124-cfa74e19";
+const BUILD = "20261124-82321d20";
 // 問題データは級ごとの別ファイル（data-2.js / data-p1.js）。選んだ級だけを読む（2026-11-14 index.html が 3.2MB になったため）
 const DATA = {};
 const dataLoading = {};
@@ -445,20 +454,20 @@ So far: ${so}` : ''}
   // 大問3 → 設問1つ＝1問（r3_step）。表示は q.para の段落と設問
   reading3: (src) => src.filter((it) => Array.isArray(it.questions) && Array.isArray(it.passage)).flatMap((it) => it.questions.map((q, k) => {
     if (!it.passage[q.para]) return null;
-    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, part: it.part, q: `${it.passage[q.para]}
+    return { id: `${it.id}#${k}`, level: it.level, topic: it.topic, part: it.part, form: q.form, q: `${it.passage[q.para]}
 
 ${q.q}`, q_ja: it.q_ja, answer: q.answer, choices: q.choices,
       point: it.point, exHead: '本文の段落', drive: { ja: it.q_ja, en: it.passage[q.para] } };
   })).filter(Boolean),
   // 第1部 → 会話と質問を放送してから4択（l1_step）。say は [英文, 話者] の並び（sayMock で読む）
-  listen1: (src) => src.filter((it) => Array.isArray(it.lines)).map((it) => ({ id: `${it.id}#0`, level: it.level, topic: it.topic, scene: it.scene, q: it.question, q_ja: it.q_ja, answer: it.answer, choices: it.choices,
+  listen1: (src) => src.filter((it) => Array.isArray(it.lines)).map((it) => ({ id: `${it.id}#0`, level: it.level, topic: it.topic, scene: it.scene, form: it.form, q: it.question, q_ja: it.q_ja, answer: it.answer, choices: it.choices,
     point: it.point, exHead: '台本', say: [...it.lines.map((l) => [l.t, l.sp]), [`Question: ${it.question}`, 'N']],
     drive: { ja: it.q_ja, en: `${it.lines.map((l) => l.t).join(' ')} ${it.question}` } })),
   // 第2部 → 設問1つ＝1問。同じ文章の設問は、文章ごと読み上げる（l2_step）
-  listen2: (src) => src.filter((it) => Array.isArray(it.questions)).flatMap((it) => it.questions.map((q, k) => ({ id: `${it.id}#${k}`, level: it.level, topic: it.topic, scene: it.scene, q: q.q, q_ja: it.q_ja, answer: q.answer, choices: q.choices,
+  listen2: (src) => src.filter((it) => Array.isArray(it.questions)).flatMap((it) => it.questions.map((q, k) => ({ id: `${it.id}#${k}`, level: it.level, topic: it.topic, scene: it.scene, form: q.form, q: q.q, q_ja: it.q_ja, answer: q.answer, choices: q.choices,
     point: it.point, exHead: '台本', say: [[it.script, speakerOf(it.id)], [`Question: ${q.q}`, 'N']], drive: { ja: it.q_ja, en: `${it.script} ${q.q}` } }))),
   // 第3部 Real-Life → 状況と質問を表示し、10秒後に放送して4択（l3_step）
-  listen3: (src) => src.filter((it) => it.script && it.situation).map((it) => ({ id: `${it.id}#0`, level: it.level, topic: it.topic, situation: it.situation, q: it.question, q_ja: it.q_ja, answer: it.answer, choices: it.choices,
+  listen3: (src) => src.filter((it) => it.script && it.situation).map((it) => ({ id: `${it.id}#0`, level: it.level, topic: it.topic, situation: it.situation, form: it.form, q: it.question, q_ja: it.q_ja, answer: it.answer, choices: it.choices,
     point: it.point, exHead: '台本', lead: 10, say: [[it.script, 'N']], drive: { ja: it.q_ja, en: it.script } })),
 };
 function addDerived(d) {
@@ -483,7 +492,7 @@ const store = (() => {
   s.grade ||= '2';
   s.rec ||= {};
   s.set ||= {};
-  const d = { pause: 6, rate: 0.95, repeat: 2, level: 'r', mode: 'choice', timeMul: 1, goal: 10, gender: 'female', voiceEn: '', voiceJa: '', voiceIn: true, readExplain: false, autoRead: false };
+  const d = { pause: 6, rate: 0.95, repeat: 2, level: 'r', mode: 'choice', timeMul: 1, goal: 10, gender: 'female', voiceEn: '', voiceJa: '', voiceIn: true, readExplain: false, autoRead: false, examDate: '' };
   for (const k in d) s.set[k] ??= d[k];
   s.daily ||= {};
   for (const k in s.daily) if (typeof s.daily[k] === 'number') s.daily[k] = { n: s.daily[k], ok: 0, ms: 0 };
@@ -500,6 +509,7 @@ const store = (() => {
   s.set.mini ||= { R: true, W: false, L: true, wt: 'sum' }; // ミニテストで解く技能
   s.lvMax ||= {};     // 級ごとの脳筋 Lv（一度上がったら下がらない。2026-11-14）
   s.seenTips ||= {};  // 各モードのコツを初めて開いた（開いた状態で出す）かどうか
+  s.formStat ||= {};  // formStat[grade][問いの形] = { n, ok }（模試・ミニテストと、形のある基礎トレの問題。2026-11-24）
   return s;
 })();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch {} }
@@ -507,6 +517,10 @@ function rec(id) { return store.rec[id] ||= { n: 0, ok: 0, box: 0, due: 0 }; }
 const dkey = (d) => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 function today() { return dkey(new Date()); }
 function addStat(o, correct, ms) { o.n++; if (correct) o.ok++; o.ms += ms; return o; }
+// 問いの形（FORM_NAME）ごとの正解率。形を持つのは大問1（kind）・長文とリスニングの1問ずつ（kind / form）
+const FORM_TYPES = ['daimon1', 'r2_step', 'r3_step', 'l1_step', 'l2_step', 'l3_step'];
+const itForm = (it) => (FORM_TYPES.includes(it.type) ? it.form || it.kind || null : null);
+function addForm(g, f, correct) { if (!f || !FORM_NAME[f]) return; const o = ((store.formStat[g] ||= {})[f] ||= { n: 0, ok: 0 }); o.n++; if (correct) o.ok++; }
 function grade(it, correct, ms, how) {
   const lvBefore = growLv(store.grade);
   const r = rec(it.id);
@@ -518,6 +532,7 @@ function grade(it, correct, ms, how) {
   r.due = Date.now() + (correct ? BOX_DAYS[r.box] * 864e5 : 10 * 60e3); // 間違えたら10分後から再出題
   r.last = correct ? 1 : 0;
   addStat((store.daily[today()] ||= { n: 0, ok: 0, ms: 0 }), correct, ms);
+  addForm(store.grade, itForm(it), correct);
   if (how) store.cnt[how] = (store.cnt[how] || 0) + 1;
   if (correct && it.level === 3) store.cnt.lv3ok = (store.cnt.lv3ok || 0) + 1;
   if (store.grade === 'p1') store.cnt.p1 = (store.cnt.p1 || 0) + 1;
@@ -973,6 +988,36 @@ function ring(n, goal, onDark = false) {
 }
 const greeting = () => { const hr = new Date().getHours(); return hr < 5 ? 'こんばんは' : hr < 11 ? 'おはようございます' : hr < 18 ? 'こんにちは' : 'こんばんは'; };
 
+// ---------- 試験まで（2026-11-24） ----------
+// 試験日までの日数（今日が 0）。未設定・日付の形が違うときは null
+function examDays() {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(store.set.examDate || ''); if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]), t = new Date(); t.setHours(0, 0, 0, 0);
+  return { n: Math.round((d - t) / 864e5), d };
+}
+// 今週の重点: { rows: [やること], go: 今日の分を始める（なければ null） }
+function weekFocus(g, n) {
+  if (n <= 2) return { rows: ['見直しだけ（型と単語）'], go: null };
+  const sk = weakSkill(g), wf = formRows(g)[0], lm = latestRes(g, null, false), rows = [];
+  rows.push(sk === 'W' ? 'ライティング 3題' : `${SKILLS.find(([k]) => k === sk)[1]} ミニテスト 2回`);
+  if (wf) rows.push(`${FORM_NAME[wf[0]]} 20問`);
+  if (!lm || Date.now() - lm.at > 10 * 864e5) rows.push('模試1回');
+  const fp = wf ? formPool(g, wf[0]) : [];
+  // W が重点なら英作文か要約の通し（入力式。解いた数の少ない方）、R・L はミニテスト
+  const st = store.stat[g] || {}, wt = ((st.essay_full || {}).n || 0) <= ((st.summary_full || {}).n || 0) ? 'essay_full' : 'summary_full';
+  const wGo = () => { const its = pick(itemsOf(g, wt, true), 1); if (its.length) start(its, TYPE_INFO[wt].name, { input: true }); else show('mini'); };
+  return { rows, go: sk === 'W' ? wGo : fp.length ? () => start(pick(fp, 10), `${FORM_NAME[wf[0]]}の練習`) : () => show('mini') };
+}
+function examCard(g) {
+  const ex = examDays();
+  if (!ex) return `<div class="card" id="examCard" style="padding:6px 16px"><div class="reco"><span class="rl"><span class="dot" style="background:#ff5f3a">${icon('target')}</span><span>試験日を設定すると、残りの日数と今週の重点が出ます</span></span><button id="setExam">設定</button></div></div>`;
+  if (ex.n < 0) return '';
+  const wf = weekFocus(g, ex.n);
+  return `<h2>試験まで</h2><div class="card" id="examCard"><div class="exdays"><span>${ex.n ? `試験まで あと <b>${ex.n}日</b>` : '<b>今日が試験日</b>'}</span><span class="muted">（${ex.d.getMonth() + 1}/${ex.d.getDate()}）</span></div>
+    <div class="label" style="margin-top:8px">今週の重点</div><ul class="focus">${wf.rows.map((x) => `<li>${h(x)}</li>`).join('')}</ul>
+    ${wf.go ? '<button class="big sub" id="exGo" style="margin-top:10px">今日の分を始める</button>' : ''}</div>`;
+}
+
 // ---------- ホーム ----------
 function home() {
   const g = store.grade, td = store.daily[today()] || { n: 0, ok: 0, ms: 0 }, st = streakInfo();
@@ -999,6 +1044,7 @@ function home() {
     ${entry('toBasic', 'linear-gradient(135deg,#2b3aa8,#5b6cf0)', 'bolt', '基礎トレ', `10問ずつ・1問10〜40秒<br>今日 ${td.n}問（目標 ${store.set.goal}問）`)}
     ${entry('toMini', 'linear-gradient(135deg,#0e9f8a,#34d399)', 'target', 'ミニテスト', `約15分・技能を選んで本番の形を小さく<br>直近: ${resText(lastMini)}`)}
     ${entry('toExam', 'linear-gradient(135deg,#be123c,#f97316)', 'pen', '本番モード', `一次試験1回分の模試（筆記＋リスニング）<br>直近: ${resText(lastMock)}`)}
+    ${examCard(g)}
     <h2>おすすめ</h2>
     <div class="card" style="padding:6px 16px">
       ${weak ? `<div class="reco"><span class="rl"><span class="dot" style="background:${lookOf(weak)[0]}">${icon(lookOf(weak)[1])}</span><span>${(store.stat[g] || {})[weak] ? '苦手を鍛える' : 'まだ解いていない'}<br><b>${TYPE_INFO[weak].name}</b></span></span><button id="weak">5問</button></div>` : ''}
@@ -1009,6 +1055,8 @@ function home() {
   app.querySelector('#toBasic').onclick = () => show('problems');
   app.querySelector('#toMini').onclick = () => show('mini');
   app.querySelector('#toExam').onclick = () => show('exam');
+  const se = app.querySelector('#setExam'); if (se) se.onclick = () => show('settings');
+  const eg = app.querySelector('#exGo'); if (eg) eg.onclick = () => { const ex = examDays(); if (ex) weekFocus(g, ex.n).go(); };
   // キャラクターを押すと、力こぶを見せてひとこと
   const hc = app.querySelector('#heroChara');
   hc.onclick = () => {
@@ -1275,7 +1323,7 @@ function mockRW(m) {
   mockTick = setInterval(() => {
     if (document.visibilityState !== 'visible') return;
     const el = document.getElementById('mtimer'); if (!el || store.mock !== m) return clearInterval(mockTick);
-    m.used++; if (m.used % 10 === 0) save();
+    m.used++; (m.secS ||= {})[m.sec] = (m.secS[m.sec] || 0) + 1; if (m.used % 10 === 0) save(); // 大問ごとの時間（開いていた画面の大問に数える）
     el.textContent = mmss(m.limit - m.used); el.classList.toggle('warn', m.limit - m.used <= 300);
     if (m.used >= m.limit) { clearInterval(mockTick); toast('筆記の時間が終わりました'); afterRW(m); }
   }, 1000);
@@ -1359,11 +1407,13 @@ function mockSelf(m) {
     return `<div class="card exam"><div class="label">${label}（あなたの答え ${n}語・指定 ${lo}〜${hi}語）${n && (n < lo || n > hi) ? ' <b style="color:var(--ng)">語数が範囲外</b>' : ''}</div>
       <p class="psg" style="text-indent:0">${h(m.text[k] || '（未記入）')}</p>
       <div class="label" style="margin-top:12px">模範解答（${countWords(modelParas(it).join(' '))}語）</div>${modelParas(it).map((p) => `<p class="psg" style="text-indent:0">${h(p)}</p>`).join('')}
+      ${m.text[k].trim() ? `<div style="margin-top:12px">${checkBox(it, m.text[k], m.g, k)}</div>` : ''}
       ${m.text[k].trim() ? SELF_VIEWS.map(([v, d], vi) => `<div class="selfrow"><div><b>${v}</b><small>${d}</small></div><div class="seg">${[0, 1, 2, 3, 4].map((s) => `<button data-sv="${k}:${vi}" data-s="${s}" class="${(m.self[k] || [])[vi] === s ? 'on' : ''}">${s}</button>`).join('')}</div></div>`).join('') : '<p class="muted">未記入なので0点</p>'}</div>`;
   };
   app.innerHTML = `<div class="card intro"><b>ライティングの自己採点</b><span>模範解答と比べて、4つの観点を 0〜4点で付ける（本番と同じ観点・1題16点）。</span></div>
     ${m.sum ? box('sum', '要約') : ''}${m.essay ? box('essay', '英作文') : ''}<button class="big" id="mfin" style="margin-bottom:40px">結果を見る</button>`;
   window.scrollTo(0, 0);
+  bindAi(app);
   app.querySelectorAll('[data-sv]').forEach((b) => b.onclick = () => { const [k, vi] = b.dataset.sv.split(':'); (m.self[k] ||= [])[+vi] = +b.dataset.s; save(); b.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); });
   app.querySelector('#mfin').onclick = () => {
     const miss = ['sum', 'essay'].some((k) => m[k] && m.text[k].trim() && [0, 1, 2, 3].some((vi) => (m.self[k] || [])[vi] === undefined));
@@ -1371,13 +1421,18 @@ function mockSelf(m) {
     mockFinish(m);
   };
 }
+// 模試の設問の問いの形（大問1・2は kind、大問3とリスニングは form）
+const mockQForm = (q) => { const k = q.key.split('#')[1], src = k == null ? q.it : (q.it.blanks || q.it.questions || [])[+k] || {}; return src.form || src.kind || null; };
 function mockFinish(m) {
   const qs = mockQuestions(m), sc = (f) => { const a = qs.filter(f); return [a.filter((q) => m.ans[q.key] === q.answer).length, a.length]; };
   const w = (k) => (m[k] && m.text[k].trim() ? (m.self[k] || []).reduce((a, x) => a + (x || 0), 0) : 0);
   const r = { at: Date.now(), g: m.g, set: m.set, mini: !!m.mini, R: sc((q) => q.sec[0] === 'r'), L: sc((q) => q.sec.startsWith('listen')), W: [w('sum') + w('essay'), (m.sum ? 16 : 0) + (m.essay ? 16 : 0)],
     parts: Object.fromEntries(['r1', 'r2', 'r3', 'listen1', 'listen2', 'listen3'].map((s) => [s, sc((q) => q.sec === s)]).filter(([, v]) => v[1])),
     sum: w('sum'), essay: w('essay'), min: Math.round(m.used / 60) };
+  r.wSelf = r.W[0] > 0 || Object.values(m.self || {}).some((a) => (a || []).some((x) => x != null)); // 自己採点をした回か（していない回の W は CSE の目安に使わない）
+  if (m.secS) r.secMin = Object.fromEntries(Object.entries(m.secS).map(([k, s]) => [k, Math.round(s / 6) / 10]));
   const lvBefore = growLv(m.g);
+  qs.forEach((q) => addForm(m.g, mockQForm(q), m.ans[q.key] === q.answer)); // 問いの形ごとの正解率（答えなかった問題は不正解）
   store.mocks.push(r);
   for (const id of [...m.r1, ...m.r2, ...m.r3, m.sum, m.essay, ...m.l].filter(Boolean)) store.mockUsed[id] = 1;
   store.lastMock = { ...m, done: r.at }; store.mock = null;
@@ -1544,10 +1599,57 @@ function stagesView(id) {
   return `<div class="stages">${STAGE_NAME.map((nm, i) => `<div class="${i + 1 > now ? 'lock' : i + 1 === now ? 'now' : ''}">${charaImg(i + 1, '', id)}${i + 1 > now ? `Lv.${i + 1}<br>${growCond(g, i + 1)}` : nm}</div>`).join('')}</div>`;
 }
 const charaPicker = () => `<div class="pick">${CHARAS.map((c) => `<button data-chara="${c.id}" class="${c.id === curChara()?.id ? 'on' : ''}">${charaImg(lv(), '', c.id)}${h(c.name)}</button>`).join('')}</div>`;
+// ---------- 合格まで（2026-11-24）。CSE は英検協会の換算式が非公開なので、正答率から置いた目安 ----------
+// 各技能: 正答率 pa（脳筋 Lv の合格ラインと同じ）で 合格点の3分の1、満点で max。その間は直線
+const CSE = { '2': { max: 650, pass: 1520, pa: 0.65 }, p1: { max: 750, pass: 1792, pa: 0.70 } };
+const cseOf = (g, p) => { const c = CSE[g], p3 = c.pass / 3; return p <= c.pa ? Math.round((p3 * p) / c.pa) : Math.round(p3 + ((c.max - p3) * (p - c.pa)) / (1 - c.pa)); };
+// 技能ごとの目安: その技能を含む直近3回まで（模試・ミニテスト）の正答率の平均 → { R: { p, v, n } | null, W, L }
+function cseEst(g) {
+  const out = {};
+  for (const [k] of SKILLS) {
+    const rs = store.mocks.filter((r) => r.g === g && r[k] && r[k][1] && (k !== 'W' || (r.wSelf ?? r.W[0] > 0))).slice(-3); // 自己採点をしていない回の W は使わない（古い記録は 0点でなければ使う）
+    out[k] = rs.length ? (() => { const p = rs.reduce((a, r) => a + r[k][0] / r[k][1], 0) / rs.length; return { p, v: cseOf(g, p), n: rs.length }; })() : null;
+  }
+  return out;
+}
+// いちばん弱い技能（目安の点が低いもの。記録がなければ W）
+const weakSkill = (g) => { const e = cseEst(g), ks = SKILLS.map(([k]) => k).filter((k) => e[k]); return ks.length ? ks.sort((a, b) => e[a].v - e[b].v)[0] : 'W'; };
+// 問いの形: 5問以上解いたものを正解率の低い順に ／ その形の基礎トレの問題
+const formRows = (g) => Object.entries(store.formStat[g] || {}).filter(([f, o]) => o.n >= 5 && FORM_NAME[f]).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n);
+const formPool = (g, f) => FORM_TYPES.flatMap((t) => (TYPE_INFO[t] ? itemsOf(g, t, true) : [])).filter((it) => itForm(it) === f);
+// 大問ごとの時間の目安（分）
+const SEC_GUIDE = { '2': { r1: 10, r2: 8, r3: 22, sum: 15, essay: 20 }, p1: { r1: 10, r2: 10, r3: 25, sum: 20, essay: 20 } };
+function passView(g) {
+  const c = CSE[g], e = cseEst(g), p3 = Math.round(c.pass / 3), has = SKILLS.filter(([k]) => e[k]);
+  const row = ([k, name]) => (e[k]
+    ? `<div class="cse"><b>${name}</b><div class="mbar" style="--pl:${((p3 / c.max) * 100).toFixed(1)}%"><i style="width:${((e[k].v / c.max) * 100).toFixed(1)}%" class="${e[k].v >= p3 ? 'ok' : e[k].v >= p3 * 0.9 ? 'mid' : 'low'}"></i><u></u></div><span>${e[k].v}/${c.max}</span></div>`
+    : `<div class="cse"><b>${name}</b><span class="muted" style="grid-column:2/4;text-align:left">まだ記録なし（ミニテストで測る）</span></div>`);
+  const tot = has.reduce((a, [k]) => a + e[k].v, 0);
+  const sumLine = has.length === 3
+    ? `<p style="margin:10px 0 0"><b>合計 ${tot}</b>（合格 ${c.pass}）・${tot >= c.pass ? '合格ラインを超えています（目安）' : `あと <b>${c.pass - tot}</b>`}</p>`
+    : `<p class="muted" style="margin:10px 0 0">3技能そろうと、合計を合格点（${c.pass}）と比べられます。</p>`;
+  const gain = (k) => cseOf(g, Math.min(1, e[k].p + 0.1)) - e[k].v, best = has.slice().sort((a, b) => gain(b[0]) - gain(a[0]))[0];
+  const fr = formRows(g).slice(0, 5);
+  const lm = store.mocks.slice().reverse().find((r) => r.g === g && !r.mini && r.secMin), gd = SEC_GUIDE[g];
+  return `<h2>合格まで（${GRADES[g]}）</h2>
+    <div class="card" id="pass"><div class="label">英検CSEスコアの目安（英検協会の換算式は非公開）</div>
+      ${SKILLS.map(row).join('')}${sumLine}
+      ${best && gain(best[0]) > 0 ? `<p style="margin:4px 0 0">先に伸ばすなら <b>${best[1]}</b>（正答率 +10% で 約 +${gain(best[0])}）</p>` : ''}
+      <p class="muted" style="margin:6px 0 0">直近3回までの模試・ミニテストの正答率から計算。ライティングは自己採点（AI添削の点を入れた場合はその点）から。縦線は各技能の合格の目安（${p3}）。</p></div>
+    <h2>問いの形ごと（苦手な順）</h2>
+    <div class="card" id="forms">${fr.length ? `<table class="t"><tr><th>問いの形</th><th>解答</th><th>正解率</th><th></th></tr>
+      ${fr.map(([f, o]) => `<tr><td>${h(FORM_NAME[f])}</td><td>${o.n}</td><td>${pct(o)}</td><td>${formPool(g, f).length ? `<button class="chipbtn" data-fp="${h(f)}">練習</button>` : ''}</td></tr>`).join('')}</table>`
+      : '<p class="muted" style="margin:0">模試・ミニテストや、大問1・長文・リスニングの1問ずつで、同じ形を5問以上解くと出ます。</p>'}</div>
+    ${lm ? `<h2>直近の模試の時間配分（${new Date(lm.at).toLocaleDateString('ja-JP')}）</h2>
+    <div class="card"><table class="t"><tr><th>大問</th><th>かかった時間</th><th>目安</th></tr>
+      ${MOCK_SECS.filter(([k]) => lm.secMin[k] != null).map(([k, name]) => `<tr><td>${name}</td><td${lm.secMin[k] > gd[k] ? ' style="color:var(--ng);font-weight:800"' : ''}>${lm.secMin[k]}分</td><td>${gd[k]}分</td></tr>`).join('')}</table>
+      <p class="muted" style="margin:6px 0 0">画面に出していた大問に時間を数えています（行き来した分も足す）。</p></div>` : ''}`;
+}
 function statsView() {
   const g = store.grade, tot = gradeTotal(g), st = store.stat[g] || {};
   const all = Object.values(store.daily).reduce((a, o) => ({ n: a.n + o.n, ok: a.ok + o.ok, ms: a.ms + o.ms }), { n: 0, ok: 0, ms: 0 });
   app.innerHTML = `
+    ${passView(g)}
     <div class="stats">
       <div><small>連続</small><b style="color:var(--orange1)">${streakInfo().n}日</b><small>最長 ${bestStreak()}日</small></div>
       <div><small>合計</small><b>${all.n}問</b><small>${minutes(all.ms)}</small></div>
@@ -1562,6 +1664,7 @@ function statsView() {
       ${TYPES.filter((t) => BASIC_TYPES.includes(t) || (st[t] || {}).n).map((t) => `<tr><td>${TYPE_INFO[t].name}</td><td>${(st[t] || {}).n || 0}</td><td>${pct(st[t])}</td><td>${secAvg(st[t])}</td></tr>`).join('')}</table></div>
     <h2>バッジ（${Object.keys(store.badges).length}/${BADGES.length}）</h2>
     <div class="badges">${BADGES.map((b) => `<div class="badge ${store.badges[b.id] ? 'got' : ''}"><i>${b.icon}</i><b>${b.name}</b><small>${store.badges[b.id] ? store.badges[b.id] : b.how}</small></div>`).join('')}</div>`;
+  app.querySelectorAll('[data-fp]').forEach((b) => b.onclick = () => start(pick(formPool(g, b.dataset.fp), 10), `${FORM_NAME[b.dataset.fp]}の練習`));
 }
 
 // ---------- 設定 ----------
@@ -1591,6 +1694,20 @@ function settings() {
       <div class="setrow"><button class="big sub" id="tryv" style="margin:4px 0">${icon('mic')}声を試す</button>
         <p class="muted" style="margin:6px 0 0">もっと自然な声にするには、iPhone の 設定 → アクセシビリティ → 読み上げコンテンツ → 声 で、英語の「Ava」「Zoe」「Evan」「Nathan」、日本語の「Kyoko」「Otoya」などの<b>拡張・プレミアム</b>の声をダウンロードしてください。入れた声の中から、品質の高いものを自動で選びます。</p></div>
     </div>
+    <h2>試験</h2>
+    <div class="card" style="padding:4px 16px">
+      <div class="setrow"><span>一次試験の日</span><input type="date" id="examDate" value="${h(store.set.examDate || '')}" style="font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:10px">
+        <button class="chipbtn" id="examClr" ${store.set.examDate ? '' : 'disabled'}>消す</button>
+        <p class="muted" style="margin:6px 0 0">ホームに、試験までの日数と今週の重点が出ます。</p></div>
+    </div>
+    <h2>記録</h2>
+    <div class="card" style="padding:4px 16px">
+      <div class="setrow"><span>記録をファイルにする（機種変更・控え用。ファイルは端末の中に保存され、通信はしません）</span>
+        <div class="grid"><button class="big sub" id="recOut">記録を書き出す</button><button class="big sub" id="recIn">記録を読み込む</button></div>
+        <input type="file" id="recFile" accept="application/json,.json" hidden>
+        <p class="muted" id="recMsg" style="margin:6px 0 0"></p>
+        <details id="recRaw" style="margin-top:6px"><summary class="muted">保存できないときは、下の文字を全部コピーしてメモなどに貼る</summary><textarea class="aitext" rows="6" readonly></textarea></details></div>
+    </div>
 
     <p class="muted" style="text-align:center">版 ${h(BUILD)}</p>`;
   app.querySelectorAll('.chips[data-key]').forEach((box) => box.querySelectorAll('button').forEach((b) => b.onclick = () => {
@@ -1606,12 +1723,45 @@ function settings() {
     await say('I believe that people should use public transportation more often.', 'en-US', true);
     await say('公共交通機関をもっと使うべきだと思います。', 'ja-JP', true);
   };
+  app.querySelector('#examDate').onchange = (e) => { store.set.examDate = e.target.value || ''; save(); settings(); };
+  app.querySelector('#examClr').onclick = () => { store.set.examDate = ''; save(); settings(); };
+  const msg = app.querySelector('#recMsg'), file = app.querySelector('#recFile');
+  app.querySelector('#recOut').onclick = () => {
+    const out = exportRecord(), url = URL.createObjectURL(new Blob([out.json], { type: 'application/json' })), a = document.createElement('a');
+    a.href = url; a.download = out.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    msg.textContent = `${out.name} を書き出しました。保存先（ファイル・ダウンロード）を確かめてください。`;
+  };
+  app.querySelector('#recRaw').ontoggle = (e) => { if (e.target.open) e.target.querySelector('textarea').value = exportRecord().json; };
+  app.querySelector('#recIn').onclick = () => file.click();
+  file.onchange = () => { const f = file.files[0]; file.value = ''; if (!f) return; f.text().then((t) => { const err = importRecord(t); if (err) msg.textContent = err; }); };
+}
+// ---------- 記録の書き出し・読み込み（端末の中だけ。2026-11-24） ----------
+function exportRecord() {
+  const d = new Date(), p = (x) => String(x).padStart(2, '0');
+  return { name: `eiken-notraining-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`, json: JSON.stringify(store) };
+}
+// 読み込んだ文字列を確かめる → { data } か { err }（このアプリの記録の形: stat・daily・set・rec は object、mocks は object の配列、grade は級か無し）
+function parseRecord(text) {
+  let o; try { o = JSON.parse(text); } catch { return { err: '記録のファイルとして読めませんでした（JSON ではありません）。' }; }
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return { err: '記録のファイルではありません。' };
+  const obj = (x) => x && typeof x === 'object' && !Array.isArray(x);
+  if (!obj(o.stat) || !obj(o.daily) || !Array.isArray(o.mocks)) return { err: 'このアプリの記録ではありません（stat・daily・mocks がない）。' };
+  if (!obj(o.set) || !obj(o.rec) || !o.mocks.every(obj) || (o.grade !== undefined && !GRADES[o.grade])) return { err: 'このアプリの記録の形と合いません（set・rec・mocks・grade）。' };
+  return { data: o };
+}
+// 読み込む: 問題がなければ確認して置き換え、読み直す。戻り値は画面に出す文（やめたときは ''）
+function importRecord(text) {
+  const r = parseRecord(text); if (r.err) return r.err;
+  if (!confirm('今の記録は読み込んだ記録に置き換わります。よいですか？')) return '';
+  try { localStorage.setItem(KEY + '-bak', localStorage.getItem(KEY) || JSON.stringify(store)); localStorage.setItem(KEY, JSON.stringify(r.data)); } catch { return '保存できませんでした（端末の空き容量を確かめてください）。'; } // 上書きの前に、今の記録を別のキーに退避する
+  location.reload(); // 古い形の記録でも、読み込み時の既定値の補い（store の初期化）を通すため読み直す
+  return null;
 }
 
 // ---------- 出題画面 ----------
-function start(items, title) {
+function start(items, title, opt = {}) {
   if (!items.length) return;
-  session = { items, i: 0, ok: 0, title, wrong: [], ms: 0, inTime: 0 };
+  session = { items, i: 0, ok: 0, title, wrong: [], ms: 0, inTime: 0, ...opt }; // opt.input: 設定に関係なく入力式で出す（試験までの「今日の分」）
   document.body.classList.add('quiz');
   question();
   scrollTo(0, 0);
@@ -1653,7 +1803,7 @@ function explainBox(it) {
 const ROLE_NAME = { intro: '序論（立場）', reason1: '理由1', example1: '理由1の説明・具体例', reason2: '理由2', example2: '理由2の説明・具体例', conclusion: '結論',
   p1: '第1段落の要約', p2: '第2段落の要約', p3: '第3段落の要約' };
 const countWords = (t) => String(t || '').trim().split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
-function fullRange(it) { const p1 = store.grade === 'p1'; return it.type === 'essay_full' ? (p1 ? [120, 150] : [80, 100]) : (p1 ? [60, 70] : [45, 55]); }
+function fullRange(it, g = store.grade) { const p1 = g === 'p1'; return it.type === 'essay_full' ? (p1 ? [120, 150] : [80, 100]) : (p1 ? [60, 70] : [45, 55]); }
 // 模範解答を段落に分ける（英作文: 序論／理由1＋説明／理由2＋説明／結論、要約: 1段落）
 function modelParas(it) {
   const t = Object.fromEntries(it.steps.map((x) => [x.role, x.t]));
@@ -1674,6 +1824,110 @@ function fullHeader(it) {
     ${it.passage.map((p) => `<p class="psg">${h(p)}</p>`).join('')}
     ${it.q_ja ? `<div class="qja" id="qja" style="display:none">要旨: ${h(it.q_ja)}</div>` : ''}</div>`;
 }
+// ---------- ライティングの自動チェック（端末の中で数えるだけ。通信しない。2026-11-24） ----------
+const CONNECTIVES = ['first', 'firstly', 'second', 'secondly', 'also', 'in addition', 'moreover', 'furthermore', 'however', 'for example', 'for instance', 'therefore', 'as a result', 'thus',
+  'in conclusion', 'to sum up', 'on the other hand', 'in contrast', 'nevertheless', 'finally'];
+const STOPWORDS = new Set(("a an the and or but so if as of to in on at by for from with about into than then that this these those there here it its it's they them their theirs he him his she her "
+  + "we us our you your i me my is are was were be been being am do does did done have has had will would can could should may might must not no yes very more most much many some any all "
+  + "also such other another one two which who whom whose what when where why how because while too only just even really can't don't doesn't isn't aren't won't").split(' '));
+const REP_ESSAY = 5, REP_SUM = 3; // 同じ語の繰り返しを △ にする回数（模範解答で △ が出すぎないように決めた）
+const BASE_V = { go: 'goes', have: 'has', do: 'does', make: 'makes', take: 'takes', think: 'thinks', want: 'wants', need: 'needs', like: 'likes', say: 'says', get: 'gets', give: 'gives', use: 'uses' };
+const NOT_3SG = new Set(['do', 'does', 'did', 'can', 'could', 'will', 'would', 'should', 'may', 'might', 'must', 'let', 'lets', 'make', 'makes', 'made', 'help', 'helps', 'helped', 'see', 'saw', 'watch', 'hear', 'not']);
+// 英単語の並び（小文字・句読点なし）と、元の文での位置
+const wTokens = (t) => [...String(t || '').matchAll(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)].map((m) => ({ w: m[0].toLowerCase().replace(/’/g, "'"), o: m[0], s: m.index, e: m.index + m[0].length }));
+// 答案 a のうち、本文 b と6語以上続けて同じ所 → [[開始, 終了), ...]（語の番号）
+function copyRuns(a, b) {
+  const runs = [], L = []; if (!a.length || !b.length) return runs;
+  let next = new Array(b.length + 1).fill(0);
+  for (let i = a.length - 1; i >= 0; i--) {
+    const cur = new Array(b.length + 1).fill(0);
+    for (let j = b.length - 1; j >= 0; j--) cur[j] = a[i].w === b[j].w ? next[j + 1] + 1 : 0;
+    L[i] = Math.max(...cur); next = cur;
+  }
+  for (let i = 0; i < a.length;) { if (L[i] >= 6) { runs.push([i, i + L[i]]); i += L[i]; } else i++; }
+  return runs;
+}
+// POINT の語（いちばん長い語。語尾の変化は見ない）が答案にあるか
+const pointUsed = (p, tk) => { const main = wTokens(p).map((x) => x.w).sort((x, y) => y.length - x.length)[0]; if (!main) return false;
+  const stems = [main, main.replace(/s$/, '')].map((w) => (w.length > 5 ? w.slice(0, -2) : w)); return tk.some((x) => stems.some((st) => x.w.startsWith(st))); }; // 語尾の s を外した形でも探す
+// 誤りの「可能性」だけを拾う（見落としの多い三単現と a / an。誤検出を減らすため、文の切れ目をまたがない）
+function grammarHints(text, tk) {
+  const out = [], sp = (i) => String(text).slice(tk[i].e, tk[i + 1].s).trim() === '';
+  for (let i = 0; i < tk.length - 1; i++) {
+    const t = tk[i], n = tk[i + 1]; if (!sp(i)) continue;
+    const caps = n.o.length > 1 && n.o === n.o.toUpperCase(); // SNS などの略語は読み方で決まるので見ない
+    if (['he', 'she', 'it'].includes(t.w) && BASE_V[n.w] && !(i > 0 && sp(i - 1) && NOT_3SG.has(tk[i - 1].w)))
+      out.push(`“${t.o} ${n.o}” → ${t.o} ${BASE_V[n.w]} かも（三単現の s）`);
+    if (t.w === 'a' && (t.o === 'a' || i === 0 || /[.!?]\s*$/.test(String(text).slice(0, t.s))) && !caps && /^[aeiou]/.test(n.w) && !/^(u[^aeiou][aeiou]|eu|ewe|one|once)/.test(n.w))
+      out.push(`“${t.o} ${n.o}” → an かも`);
+    if (t.w === 'an' && !caps && /^[b-df-hj-np-tv-z]/.test(n.w) && !/^(hour|honest|hono|heir)/.test(n.w))
+      out.push(`“${t.o} ${n.o}” → a かも`);
+  }
+  return out;
+}
+// 自動チェック: { items: [{ lv: 'ok' | 'warn' | 'ng' | 'info', t }], copy: [[開始, 終了), ...]（答案の文字の位置。本文の写し） }
+function writeCheck(it, text, g = store.grade) {
+  const items = [], add = (lv, t) => items.push({ lv, t }), essay = it.type === 'essay_full';
+  if (!String(text || '').trim()) return { items: [{ lv: 'ng', t: '未記入' }], copy: [] };
+  const tk = wTokens(text), n = countWords(text), [lo, hi] = fullRange(it, g);
+  add(n >= lo && n <= hi ? 'ok' : 'ng', `語数 ${n}語（指定 ${lo}〜${hi}語）${n < lo ? '。足りない' : n > hi ? '。多すぎる' : ''}`);
+  const paras = String(text).split(/\n+/).filter((p) => p.trim()).length;
+  if (essay) add(paras === 4 ? 'ok' : 'warn', `段落 ${paras}つ（英作文は 序論・理由1・理由2・結論 の4段落）`);
+  else add('info', `段落 ${paras}つ`);
+  let copy = [];
+  if (!essay && Array.isArray(it.passage)) {
+    const runs = copyRuns(tk, wTokens(it.passage.join(' ')));
+    copy = runs.map(([a, b]) => [tk[a].s, tk[b - 1].e]);
+    add(!runs.length ? 'ok' : runs.length >= 2 || runs.some(([a, b]) => b - a >= 8) ? 'ng' : 'warn',
+      runs.length ? `本文と同じ語の並び（6語以上）が ${runs.length}か所（下の下線）。言い換えないと語彙の点が下がる` : '本文をそのまま写した所はない（6語以上の連続一致なし）');
+  }
+  if (essay && g === 'p1' && Array.isArray(it.points)) {
+    const used = it.points.filter((p) => pointUsed(p, tk));
+    add(used.length >= 2 ? 'ok' : 'warn', used.length ? `POINTS: ${used.join('・')} の語がある（2つ使う）` : 'POINTS の語が見つからない（2つ使う）');
+  }
+  const flat = ' ' + tk.map((x) => x.w).join(' ') + ' ', found = CONNECTIVES.filter((c) => flat.includes(' ' + c + ' '));
+  const cn = found.reduce((a, c) => a + flat.split(' ' + c + ' ').length - 1, 0);
+  add((essay ? cn < 2 : cn === 0) ? 'warn' : 'ok', cn ? `つなぎ語 ${cn}個（${found.join('・')}）${essay && cn < 2 ? '。First / Second / In conclusion などで流れを示す' : ''}` : 'つなぎ語がない（First / However / In conclusion など）');
+  const given = new Set(wTokens([it.situation, it.question, it.title, ...(it.points || [])].filter(Boolean).join(' ')).map((x) => x.w)); // 問題文・POINTS・タイトルの語は数えない
+  const cnt = {}; tk.forEach((x) => { if (x.w.length >= 3 && !STOPWORDS.has(x.w) && !given.has(x.w) && !/^\d+$/.test(x.w)) cnt[x.w] = (cnt[x.w] || 0) + 1; });
+  const rep = Object.entries(cnt).filter(([, v]) => v >= (essay ? REP_ESSAY : REP_SUM)).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  add(rep.length ? 'warn' : 'ok', rep.length ? `同じ語の繰り返し: ${rep.map(([w, v]) => `${w} ×${v}`).join('・')}（言い換えると語彙の点が上がる）` : '同じ語の繰り返しは目立たない');
+  const gh = grammarHints(text, tk);
+  if (gh.length) gh.slice(0, 4).forEach((x) => add('warn', `文法の可能性: ${x}`)); else add('ok', '三単現・a / an の見落としは見つからない（簡易チェック）');
+  return { items, copy };
+}
+// AI に添削を頼む依頼文（コピーして使う。答案と問題だけで、個人の情報は入れない）
+function aiPrompt(it, text, g = store.grade) {
+  const essay = it.type === 'essay_full', [lo, hi] = fullRange(it, g);
+  const task = essay
+    ? [`問題（英作文）: ${[it.situation, it.question].filter(Boolean).join(' ')}`, `POINTS: ${(it.points || []).join(' / ')}`,
+      g === 'p1' ? '条件: POINTS のうち2つを使って、自分の意見と理由を書く。' : '条件: 自分の意見と、その理由を2つ書く（POINTS は参考）。']
+    : ['問題（要約）: 次の英文を要約する。', '本文:', ...(it.passage || [])];
+  return [`あなたは英検${GRADES[g]}の一次試験（ライティング）の採点者です。次の答案を本番と同じ基準で採点し、直してください。`, '',
+    ...task, `語数の指定: ${lo}〜${hi}語`, '', `答案（${countWords(text)}語）:`, String(text).trim(), '',
+    `採点の観点: 内容・構成・語彙・文法（各0〜4点、合計16点）。${essay ? '' : '本文の語句をそのまま写した部分が多いと、語彙の点が下がる。'}語数が指定の範囲外なら、そのことも指摘する。`, '',
+    '次の形で、日本語で答えてください。', '1) 各観点の点と理由', '2) 誤りの直し（元 → 直し・理由）', '3) 書き直した答案（指定の語数で）', '4) 次に気をつけること3つ'].join('\n');
+}
+const markCopy = (text, copy) => { let out = '', at = 0; for (const [s, e] of copy) { out += h(text.slice(at, s)) + `<u>${h(text.slice(s, e))}</u>`; at = e; } return out + h(text.slice(at)); };
+const aiText = {}; // data-ai の鍵 → 依頼文
+function checkBox(it, text, g, key) {
+  const r = writeCheck(it, text, g), mark = { ok: '✓', warn: '△', ng: '✗', info: '・' };
+  aiText[key] = aiPrompt(it, text, g);
+  return `<div class="wcheck" data-wc="${h(key)}"><div class="label">自動チェック（端末の中で数えた目安）</div>
+    <ul class="wchk">${r.items.map((x) => `<li class="${x.lv}"><i>${mark[x.lv]}</i><span>${h(x.t)}</span></li>`).join('')}</ul>
+    ${r.copy.length ? `<div class="wchk-pv">${markCopy(String(text), r.copy)}</div>` : ''}
+    ${String(text || '').trim() ? `<button class="big sub" data-ai="${h(key)}" style="margin-top:12px">AIに添削を頼む（依頼文をコピー）</button>
+    <p class="muted" style="margin:6px 0 0">Claude や ChatGPT のアプリに貼ると、4観点の点と直しが返ってきます。返ってきた点を下の採点に入れてください。アプリは通信しません。</p>
+    <div data-aibox="${h(key)}"></div>` : ''}</div>`;
+}
+function bindAi(root) {
+  root.querySelectorAll('[data-ai]').forEach((b) => b.onclick = () => {
+    const t = aiText[b.dataset.ai], box = root.querySelector(`[data-aibox="${b.dataset.ai}"]`);
+    const manual = () => { box.innerHTML = `<p class="muted" style="margin:8px 0 0">コピーできなかったので、下の文を全部選んでコピーしてください。</p><textarea class="aitext" rows="8" readonly>${h(t)}</textarea>`; const ta = box.querySelector('textarea'); ta.focus(); ta.select(); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => toast('依頼文をコピーしました'), manual); else manual();
+  });
+}
+
 // 本番の段階 → それを鍛える基礎トレ（具体例・段落の役割の専用ドリルができたら差し替える）
 const DRILL_OF = { intro: 'q_read', conclusion: 'template', reason1: 'reason', reason2: 'reason', example1: 'support', example2: 'support', p1: 'para_role', p2: 'summary', p3: 'generalize' };
 function drillFor(missed) {
@@ -1682,7 +1936,7 @@ function drillFor(missed) {
   return t ? `<button class="big sub" id="drill" data-t="${t}">${icon('bolt')}「${ROLE_NAME[missed[0]]}」を基礎トレで鍛える（${TYPE_INFO[t].name} 5問）</button>` : '';
 }
 function fullQuestion() {
-  const s = session, it = s.items[s.i], info = TYPE_INFO[it.type], input = store.set.mode === 'input';
+  const s = session, it = s.items[s.i], info = TYPE_INFO[it.type], input = store.set.mode === 'input' || !!s.input;
   const [lo, hi] = fullRange(it), goal = targetSec(it.type, store.grade), t0 = Date.now();
   const ms = () => Date.now() - t0;
   const top = () => `<div class="top"><button id="quit">やめる</button><span class="grow">${h(s.title)} ${s.i + 1}/${s.items.length}</span><span class="timer" id="timer">0秒</span></div>`;
@@ -1725,16 +1979,19 @@ function fullQuestion() {
       app.querySelector('#after').innerHTML = `
         <div class="point"><b class="vd ${inRange ? '' : 'ng'}">${n}語</b><span>${inRange ? `語数は範囲内（${lo}〜${hi}語）` : `語数が範囲外（${lo}〜${hi}語）。本番では減点される`}</span></div>
         ${modelBox('模範解答')}
-        <div class="card"><div class="label">自己採点（できた観点を押す。本番は各4点×4観点＝16点）</div>
-          <div class="chips" id="crit">${crit.map(([k, d], i) => `<button data-c="${i}"><b>${k}</b>：${d}</button>`).join('')}</div>
+        <div class="card">${checkBox(it, ans.value, store.grade, 'full')}</div>
+        <div class="card" id="fself"><div class="label">自己採点（4観点を 0〜4点で付ける。本番と同じ・1題16点）</div>
+          ${crit.map(([k, d], vi) => `<div class="selfrow"><div><b>${k}</b><small>${d}</small></div><div class="seg">${[0, 1, 2, 3, 4].map((x) => `<button data-fv="${vi}" data-s="${x}">${x}</button>`).join('')}</div></div>`).join('')}
           <div class="muted" id="est" style="margin-top:8px"></div></div>
         <div class="point"><b class="vd" style="background:var(--indigo)">要点</b><span>${h(it.point)}</span></div>
         <div class="footer"><button class="big" id="next">${s.i === s.items.length - 1 ? '結果を見る' : '次へ'}</button></div>`;
-      bindSpeakers(app);
-      const est = () => { const k = app.querySelectorAll('#crit .on').length; app.querySelector('#est').textContent = `推定 ${Math.max(0, k * 4 - (inRange ? 0 : 2))} / 16 点`; };
-      app.querySelectorAll('#crit button').forEach((b) => b.onclick = () => { b.classList.toggle('on'); est(); });
+      bindSpeakers(app); bindAi(app);
+      // 12点以上で、語数が範囲内なら「できた」（2026-11-24 観点のオン・オフ3つ以上から変更）
+      const sc = [], total = () => sc.reduce((a, x) => a + (x || 0), 0);
+      const est = () => { app.querySelector('#est').textContent = `合計 ${total()} / 16 点（12点以上で、語数が範囲内なら「できた」）`; };
+      app.querySelectorAll('[data-fv]').forEach((b) => b.onclick = () => { sc[+b.dataset.fv] = +b.dataset.s; b.parentElement.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); est(); });
       est();
-      app.querySelector('#next').onclick = () => { finishAll(app.querySelectorAll('#crit .on').length >= 3 && inRange); goNext(); };
+      app.querySelector('#next').onclick = () => { finishAll(total() >= 12 && inRange); goNext(); };
     };
     return;
   }
